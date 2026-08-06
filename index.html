@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#0057B8">
+    <title>🧱 学习积木世界</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">🧱</div>
+            <div class="title">
+                <h2>学习积木世界</h2>
+                <p>二年级 · 积木闯关</p>
+            </div>
+            <button class="sidebar-close" id="sidebarClose">✕</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="nav-item active child-only" data-module="home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">基地</span>
+            </a>
+            <a class="nav-item child-only" data-module="plan">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">每日任务</span>
+                <span class="nav-badge" id="planBadge">0</span>
+            </a>
+            <div class="nav-section child-only">学习技能</div>
+            <a class="nav-item child-only" data-module="chinese">
+                <span class="nav-icon">📖</span>
+                <span class="nav-text">语文</span>
+                <span class="nav-tag">人教版</span>
+            </a>
+            <a class="nav-item child-only" data-module="math">
+                <span class="nav-icon">🔢</span>
+                <span class="nav-text">数学</span>
+                <span class="nav-tag">苏教版</span>
+            </a>
+            <a class="nav-item child-only" data-module="english">
+                <span class="nav-icon">🔤</span>
+                <span class="nav-text">英语</span>
+            </a>
+            <div class="nav-section child-only">实践活动</div>
+            <a class="nav-item child-only" data-module="labor">
+                <span class="nav-icon">🧹</span>
+                <span class="nav-text">劳动</span>
+            </a>
+            <a class="nav-item child-only" data-module="sports">
+                <span class="nav-icon">⚽</span>
+                <span class="nav-text">运动</span>
+            </a>
+            <div class="nav-section child-only">成就系统</div>
+            <a class="nav-item child-only" data-module="checkin">
+                <span class="nav-icon">📅</span>
+                <span class="nav-text">每日签到</span>
+            </a>
+            <a class="nav-item child-only" data-module="points">
+                <span class="nav-icon">💎</span>
+                <span class="nav-text">积木币</span>
+                <span class="nav-badge highlight" id="pointsBadge">0</span>
+            </a>
+            <a class="nav-item child-only" data-module="rewards">
+                <span class="nav-icon">🎁</span>
+                <span class="nav-text">奖励商店</span>
+            </a>
+            <a class="nav-item child-only" data-module="pet">
+                <span class="nav-icon">🐾</span>
+                <span class="nav-text">伙伴</span>
+            </a>
+            <a class="nav-item child-only" data-module="games">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-text">小游戏</span>
+            </a>
+
+            <!-- 家长模式导航 -->
+            <div class="nav-section parent-only">家长管理</div>
+            <a class="nav-item parent-only" data-module="parent-review">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-text">打卡审核</span>
+                <span class="nav-badge review-badge" id="reviewBadge" style="display:none;">0</span>
+            </a>
+            <a class="nav-item parent-only" data-module="parent-tasks">
+                <span class="nav-icon">📝</span>
+                <span class="nav-text">任务管理</span>
+            </a>
+            <a class="nav-item parent-only" data-module="parent-stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">学习报告</span>
+            </a>
+            <a class="nav-item parent-only" data-module="parent-rewards">
+                <span class="nav-icon">🎁</span>
+                <span class="nav-text">奖励管理</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="parent-toggle-btn" id="parentToggleBtn">
+                <span>👨‍👩‍👧</span>
+                <span id="parentToggleText">家长模式</span>
+            </button>
+            <div class="sync-indicator sync-off" id="syncIndicator">
+                <span class="sync-dot"></span>
+                <span>未连接</span>
+            </div>
+            <button class="sync-btn" id="syncBtn">
+                <span>🔄</span>
+                <span>云端同步</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+        <header class="topbar">
+            <button class="menu-toggle" id="menuToggle">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="topbar-date" id="topbarDate"></div>
+            <div class="parent-mode-badge">
+                <span>👨‍👩‍👧</span>
+                <span>家长模式</span>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-stat">
+                    <span class="stat-icon">💎</span>
+                    <span class="stat-value" id="topPoints">0</span>
+                </div>
+                <div class="topbar-stat">
+                    <span class="stat-icon">🔥</span>
+                    <span class="stat-value" id="topStreak">0</span>
+                </div>
+                <div class="topbar-pet" id="topbarPet" title="查看伙伴">🥚</div>
+            </div>
+        </header>
+
+        <div class="content-area" id="contentArea"></div>
+    </main>
+
+    <div class="modal-container" id="modalContainer"></div>
+    <div class="toast-container" id="toastContainer"></div>
+    <div class="firework-container" id="fireworkContainer"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/cloudsync.js"></script>
+    <script src="js/parent.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

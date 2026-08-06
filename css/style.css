@@ -1,0 +1,1907 @@
+/* ========================================
+   学习积木世界 - LEGO乐高积木风格样式表
+   ======================================== */
+
+/* ===== CSS 变量 - LEGO配色 ===== */
+:root {
+    /* LEGO 经典色 */
+    --lego-red: #CE1126;
+    --lego-red-dark: #A00E1F;
+    --lego-red-light: #E63946;
+    --lego-blue: #0057B8;
+    --lego-blue-dark: #003D82;
+    --lego-blue-light: #1E77D0;
+    --lego-yellow: #FCD116;
+    --lego-yellow-dark: #D4A900;
+    --lego-yellow-light: #FFE14D;
+    --lego-green: #00852B;
+    --lego-green-dark: #006B22;
+    --lego-green-light: #1FAA45;
+    --lego-orange: #FF6F00;
+    --lego-orange-dark: #CC5800;
+    --lego-orange-light: #FF8F1F;
+    --lego-purple: #6B2C91;
+    --lego-purple-light: #8E44C1;
+    --lego-gray: #6D6E71;
+    --lego-gray-dark: #414042;
+    --lego-gray-light: #9E9E9E;
+    --lego-tan: #D4C19C;
+    --lego-white: #FFFFFF;
+    --lego-black: #1A1A1A;
+
+    /* 背景色 */
+    --bg-base: linear-gradient(180deg, #87CEEB 0%, #98D8E8 40%, #B5E0C8 100%);
+    --bg-panel: #FFFFFF;
+    --bg-panel-soft: #F5F5F5;
+    --bg-card: #FFFFFF;
+
+    /* 文字 */
+    --text-main: #2C2C2C;
+    --text-light: #FFFFFF;
+    --text-muted: #888;
+    --text-accent: #0057B8;
+
+    /* 尺寸 */
+    --sidebar-width: 250px;
+    --topbar-height: 64px;
+
+    /* 积木阴影 */
+    --brick-shadow: 0 4px 0 rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.1);
+    --brick-shadow-sm: 0 3px 0 rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.08);
+    --brick-inset: inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.1);
+
+    /* 圆角 */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+
+    /* 字体 */
+    --font-main: 'Fredoka', 'Nunito', 'Microsoft YaHei', sans-serif;
+    --font-bold: 'Fredoka', 'Nunito', 'Microsoft YaHei', sans-serif;
+}
+
+/* ===== 基础重置 ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--font-main);
+    background: var(--bg-base);
+    background-attachment: fixed;
+    color: var(--text-main);
+    line-height: 1.6;
+    overflow-x: hidden;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* 底部积木底板装饰 */
+body::before {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: var(--lego-green);
+    background-image:
+        radial-gradient(circle at 12px 12px, var(--lego-green-light) 6px, transparent 7px),
+        radial-gradient(circle at 36px 12px, var(--lego-green-light) 6px, transparent 7px),
+        radial-gradient(circle at 60px 12px, var(--lego-green-light) 6px, transparent 7px);
+    background-size: 48px 24px;
+    background-repeat: repeat-x;
+    z-index: 0;
+    pointer-events: none;
+    box-shadow: 0 -4px 0 var(--lego-green-dark);
+}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #E0E0E0; border-radius: 5px; }
+::-webkit-scrollbar-thumb {
+    background: var(--lego-blue);
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--lego-blue-dark); }
+
+/* ===== LEGO 积木按钮 ===== */
+.lego-btn {
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 24px;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    border-radius: var(--radius-md);
+    background: var(--lego-blue);
+    background-image: linear-gradient(to bottom, var(--lego-blue-light) 0%, var(--lego-blue) 60%, var(--lego-blue-dark) 100%);
+    box-shadow: var(--brick-shadow-sm), var(--brick-inset);
+    transition: all 0.15s ease;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    user-select: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.lego-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 8px 16px rgba(0,0,0,0.12), var(--brick-inset);
+}
+
+.lego-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.15), var(--brick-inset);
+}
+
+.lego-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.lego-btn-green {
+    background: var(--lego-green);
+    background-image: linear-gradient(to bottom, var(--lego-green-light) 0%, var(--lego-green) 60%, var(--lego-green-dark) 100%);
+}
+.lego-btn-red {
+    background: var(--lego-red);
+    background-image: linear-gradient(to bottom, var(--lego-red-light) 0%, var(--lego-red) 60%, var(--lego-red-dark) 100%);
+}
+.lego-btn-yellow {
+    background: var(--lego-yellow);
+    background-image: linear-gradient(to bottom, var(--lego-yellow-light) 0%, var(--lego-yellow) 60%, var(--lego-yellow-dark) 100%);
+    color: var(--lego-black);
+    text-shadow: 0 1px 1px rgba(255,255,255,0.3);
+}
+.lego-btn-orange {
+    background: var(--lego-orange);
+    background-image: linear-gradient(to bottom, var(--lego-orange-light) 0%, var(--lego-orange) 60%, var(--lego-orange-dark) 100%);
+}
+.lego-btn-purple {
+    background: var(--lego-purple);
+    background-image: linear-gradient(to bottom, var(--lego-purple-light) 0%, var(--lego-purple) 60%, #4A1D67 100%);
+}
+.lego-btn-gray {
+    background: var(--lego-gray);
+    background-image: linear-gradient(to bottom, var(--lego-gray-light) 0%, var(--lego-gray) 60%, var(--lego-gray-dark) 100%);
+}
+.lego-btn-blue {
+    background: var(--lego-blue);
+    background-image: linear-gradient(to bottom, var(--lego-blue-light) 0%, var(--lego-blue) 60%, var(--lego-blue-dark) 100%);
+}
+.lego-btn-gold {
+    background: var(--lego-yellow);
+    background-image: linear-gradient(to bottom, #FFE066 0%, var(--lego-yellow) 60%, #D4A800 100%);
+    color: var(--lego-black);
+    text-shadow: 0 1px 1px rgba(255,255,255,0.3);
+}
+
+/* ===== 面板/卡片 ===== */
+.lego-panel {
+    background: var(--bg-panel);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--brick-shadow-sm);
+    position: relative;
+    border: 2px solid rgba(0,0,0,0.06);
+}
+
+.lego-panel-dark {
+    background: var(--lego-gray-dark);
+    background-image: linear-gradient(135deg, #4A4A4A 0%, var(--lego-gray-dark) 100%);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    color: var(--text-light);
+    box-shadow: var(--brick-shadow-sm);
+}
+
+/* ===== 积木槽位 ===== */
+.lego-slot {
+    background: var(--lego-gray-light);
+    background-image: linear-gradient(to bottom, #AEAEAE 0%, var(--lego-gray-light) 100%);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    transition: all 0.15s ease;
+    box-shadow: var(--brick-inset);
+    border: 2px solid var(--lego-gray);
+}
+
+.lego-slot:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--brick-shadow-sm), var(--brick-inset);
+}
+
+/* ===== 侧边栏 ===== */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background: var(--lego-blue-dark);
+    background-image: linear-gradient(180deg, var(--lego-blue) 0%, var(--lego-blue-dark) 100%);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.15);
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--lego-red);
+    background-image: linear-gradient(135deg, var(--lego-red-light) 0%, var(--lego-red) 60%, var(--lego-red-dark) 100%);
+    border-bottom: 3px solid var(--lego-red-dark);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.sidebar-header .logo {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.sidebar-header .title h2 {
+    font-family: var(--font-bold);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-light);
+    line-height: 1.3;
+}
+
+.sidebar-header .title p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+}
+
+.sidebar-close {
+    display: none;
+    background: rgba(0,0,0,0.2);
+    border: none;
+    color: #FFF;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: auto;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+.nav-section {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    padding: 16px 12px 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    position: relative;
+    border-radius: var(--radius-sm);
+}
+
+.nav-item:hover {
+    background: rgba(255,255,255,0.12);
+    color: #FFFFFF;
+    transform: translateX(2px);
+}
+
+.nav-item.active {
+    background: var(--lego-yellow);
+    background-image: linear-gradient(to right, var(--lego-yellow-light) 0%, var(--lego-yellow) 100%);
+    color: var(--lego-black);
+    font-weight: 700;
+    box-shadow: 0 3px 0 var(--lego-yellow-dark);
+}
+
+.nav-item.parent-only {
+    display: none;
+}
+
+body.parent-mode .nav-item.parent-only {
+    display: flex;
+}
+
+body.parent-mode .nav-item.child-only {
+    display: none;
+}
+
+.nav-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+}
+
+.nav-text { flex: 1; }
+
+.nav-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.2);
+    color: var(--lego-yellow-light);
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.nav-item.active .nav-tag {
+    background: rgba(0,0,0,0.15);
+    color: var(--lego-red-dark);
+}
+
+.nav-badge {
+    font-size: 11px;
+    min-width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    font-weight: 700;
+    background: var(--lego-red);
+    color: #FFF;
+    border-radius: 11px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.nav-badge.highlight {
+    background: var(--lego-yellow);
+    color: var(--lego-black);
+}
+
+.nav-badge.review-badge {
+    background: var(--lego-orange);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+.sidebar-footer {
+    padding: 12px;
+    border-top: 2px solid rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.15);
+}
+
+/* 家长模式切换按钮 */
+.parent-toggle-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-main);
+    font-size: 13px;
+    font-weight: 700;
+    color: #FFF;
+    border-radius: var(--radius-sm);
+    background: var(--lego-purple);
+    background-image: linear-gradient(to bottom, var(--lego-purple-light) 0%, var(--lego-purple) 60%, #4A1D67 100%);
+    box-shadow: 0 3px 0 #4A1D67, var(--brick-inset);
+    margin-bottom: 8px;
+}
+
+.parent-toggle-btn:hover { transform: translateY(-1px); }
+.parent-toggle-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #4A1D67, var(--brick-inset); }
+
+body.parent-mode .parent-toggle-btn {
+    background: var(--lego-green);
+    background-image: linear-gradient(to bottom, var(--lego-green-light) 0%, var(--lego-green) 60%, var(--lego-green-dark) 100%);
+    box-shadow: 0 3px 0 var(--lego-green-dark), var(--brick-inset);
+}
+
+/* 同步状态指示器 */
+.sync-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(0,0,0,0.3);
+    color: #AAA;
+}
+
+.sync-indicator .sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sync-indicator.sync-ok { color: #69F0AE; }
+.sync-indicator.sync-ok .sync-dot { background: #69F0AE; box-shadow: 0 0 6px #69F0AE; }
+.sync-indicator.sync-active { color: var(--lego-yellow-light); }
+.sync-indicator.sync-active .sync-dot { background: var(--lego-yellow-light); animation: pulse 1s ease-in-out infinite; }
+.sync-indicator.sync-error { color: #FF6B6B; }
+.sync-indicator.sync-error .sync-dot { background: #FF6B6B; }
+.sync-indicator.sync-off { color: #888; }
+.sync-indicator.sync-off .sync-dot { background: #666; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.sync-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFF;
+    border-radius: var(--radius-sm);
+    background: var(--lego-blue);
+    background-image: linear-gradient(to bottom, var(--lego-blue-light) 0%, var(--lego-blue) 60%, var(--lego-blue-dark) 100%);
+    box-shadow: 0 3px 0 var(--lego-blue-dark), var(--brick-inset);
+}
+
+.sync-btn:hover { transform: translateY(-1px); }
+.sync-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--lego-blue-dark), var(--brick-inset); }
+.sync-btn.syncing { pointer-events: none; opacity: 0.6; }
+.sync-btn.syncing span:first-child { animation: spin 0.8s linear infinite; }
+
+/* ===== 遮罩层 ===== */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.overlay.show { display: block; opacity: 1; }
+
+/* ===== 主内容区 ===== */
+.main-content {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    transition: margin 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== 顶部栏 ===== */
+.topbar {
+    height: var(--topbar-height);
+    background: var(--lego-yellow);
+    background-image: linear-gradient(to bottom, var(--lego-yellow-light) 0%, var(--lego-yellow) 60%, var(--lego-yellow-dark) 100%);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 0 var(--lego-yellow-dark), 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background: var(--lego-red);
+    background-image: linear-gradient(to bottom, var(--lego-red-light), var(--lego-red));
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    padding: 8px;
+    box-shadow: 0 3px 0 var(--lego-red-dark);
+}
+
+.menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background: #FFF;
+    border-radius: 2px;
+}
+
+.topbar-date {
+    font-family: var(--font-main);
+    font-size: 14px;
+    color: var(--lego-black);
+    font-weight: 700;
+}
+
+.topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topbar-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #FFF;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--lego-black);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+}
+
+.topbar-stat .stat-icon { font-size: 18px; }
+
+.topbar-pet {
+    width: 44px;
+    height: 44px;
+    background: #FFF;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+}
+.topbar-pet:hover { transform: scale(1.1) rotate(5deg); }
+.topbar-pet:active { transform: scale(0.95); }
+
+/* 家长模式标识 */
+.parent-mode-badge {
+    display: none;
+    padding: 4px 12px;
+    background: var(--lego-purple);
+    color: #FFF;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 0 var(--lego-purple-dark, #4A1D67);
+}
+body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ===== 内容区 ===== */
+.content-area {
+    flex: 1;
+    padding: 20px;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 60px;
+}
+
+/* ===== 页面标题 ===== */
+.page-title {
+    font-family: var(--font-bold);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--lego-blue-dark);
+    margin-bottom: 6px;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+/* ===== 标签页 ===== */
+.tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.tab {
+    padding: 8px 18px;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    background: #E0E0E0;
+    color: #666;
+    border-radius: var(--radius-sm);
+    border: none;
+}
+
+.tab:hover { background: #D0D0D0; }
+
+.tab.active {
+    background: var(--lego-blue);
+    background-image: linear-gradient(to bottom, var(--lego-blue-light), var(--lego-blue));
+    color: #FFF;
+    box-shadow: 0 3px 0 var(--lego-blue-dark);
+}
+
+/* ===== 网格 ===== */
+.grid { display: grid; gap: 14px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ===== 首页 Hero ===== */
+.home-hero {
+    background: var(--lego-red);
+    background-image: linear-gradient(135deg, var(--lego-red-light) 0%, var(--lego-red) 50%, var(--lego-red-dark) 100%);
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--brick-shadow);
+}
+
+.home-hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background-image: radial-gradient(circle at 20px 10px, rgba(255,255,255,0.15) 8px, transparent 9px);
+    background-size: 40px 20px;
+}
+
+.home-hero h1 {
+    font-family: var(--font-bold);
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.home-hero p {
+    font-size: 15px;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+}
+
+.home-hero .hero-emoji {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 56px;
+    z-index: 1;
+    animation: blockFloat 3s ease-in-out infinite;
+}
+
+@keyframes blockFloat {
+    0%, 100% { transform: translateY(-50%) rotate(-5deg); }
+    50% { transform: translateY(-60%) rotate(5deg); }
+}
+
+/* ===== 统计卡片 ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border-radius: var(--radius-lg);
+}
+
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 7px 0 rgba(0,0,0,0.15), 0 9px 16px rgba(0,0,0,0.1); }
+.stat-card:active { transform: translateY(1px); }
+
+.stat-card .stat-icon-lg {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    box-shadow: var(--brick-inset);
+}
+
+.stat-card .stat-info h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.stat-card .stat-info p {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* 积木配色 */
+.bg-red { background: var(--lego-red); background-image: linear-gradient(to bottom, var(--lego-red-light), var(--lego-red)); color: #FFF; }
+.bg-blue { background: var(--lego-blue); background-image: linear-gradient(to bottom, var(--lego-blue-light), var(--lego-blue)); color: #FFF; }
+.bg-yellow { background: var(--lego-yellow); background-image: linear-gradient(to bottom, var(--lego-yellow-light), var(--lego-yellow)); color: var(--lego-black); }
+.bg-green { background: var(--lego-green); background-image: linear-gradient(to bottom, var(--lego-green-light), var(--lego-green)); color: #FFF; }
+.bg-orange { background: var(--lego-orange); background-image: linear-gradient(to bottom, var(--lego-orange-light), var(--lego-orange)); color: #FFF; }
+.bg-purple { background: var(--lego-purple); background-image: linear-gradient(to bottom, var(--lego-purple-light), var(--lego-purple)); color: #FFF; }
+.bg-gray { background: var(--lego-gray); background-image: linear-gradient(to bottom, var(--lego-gray-light), var(--lego-gray)); color: #FFF; }
+
+/* ===== 进度条 ===== */
+.progress-bar {
+    width: 100%;
+    height: 16px;
+    background: #E0E0E0;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--lego-green);
+    background-image: linear-gradient(to bottom, var(--lego-green-light) 0%, var(--lego-green) 100%);
+    transition: width 0.4s ease;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.3);
+}
+
+.progress-fill.blue { background: var(--lego-blue); background-image: linear-gradient(to bottom, var(--lego-blue-light), var(--lego-blue)); }
+.progress-fill.yellow { background: var(--lego-yellow); background-image: linear-gradient(to bottom, var(--lego-yellow-light), var(--lego-yellow)); }
+.progress-fill.red { background: var(--lego-red); background-image: linear-gradient(to bottom, var(--lego-red-light), var(--lego-red)); }
+.progress-fill.orange { background: var(--lego-orange); background-image: linear-gradient(to bottom, var(--lego-orange-light), var(--lego-orange)); }
+
+/* ===== 任务列表 ===== */
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #FFF;
+    border-radius: var(--radius-md);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    border: 2px solid #EEE;
+}
+
+.task-item:hover { transform: translateX(4px); box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
+.task-item.completed { opacity: 0.6; }
+.task-item.completed .task-name { text-decoration: line-through; }
+
+/* 待审核状态 */
+.task-item.pending { border-color: var(--lego-orange); background: #FFF8E1; }
+.task-item.approved { border-color: var(--lego-green); }
+.task-item.rejected { border-color: var(--lego-red); opacity: 0.5; }
+
+.task-checkbox {
+    width: 28px;
+    height: 28px;
+    background: #E0E0E0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+    color: #999;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.task-item.completed .task-checkbox {
+    background: var(--lego-green);
+    background-image: linear-gradient(to bottom, var(--lego-green-light), var(--lego-green));
+    color: #FFF;
+}
+
+.task-info { flex: 1; }
+
+.task-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.task-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 12px;
+    margin-top: 2px;
+}
+
+.task-points {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFF;
+    white-space: nowrap;
+    background: var(--lego-yellow);
+    background-image: linear-gradient(to bottom, var(--lego-yellow-light), var(--lego-yellow));
+    color: var(--lego-black);
+    border-radius: 12px;
+    padding: 3px 10px;
+    box-shadow: 0 2px 0 var(--lego-yellow-dark);
+}
+
+.task-status-tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.task-status-tag.pending { background: #FFE0B2; color: var(--lego-orange-dark); }
+.task-status-tag.approved { background: #C8E6C9; color: var(--lego-green-dark); }
+.task-status-tag.rejected { background: #FFCDD2; color: var(--lego-red-dark); }
+
+/* ===== 学科课程卡片 ===== */
+.subject-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.lesson-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    box-shadow: var(--brick-shadow-sm);
+}
+
+.lesson-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--brick-shadow);
+}
+
+.lesson-card .lesson-header {
+    padding: 14px;
+    color: #FFF;
+    position: relative;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+}
+
+.lesson-card .lesson-body { padding: 14px; }
+
+.lesson-card .lesson-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.lesson-card .lesson-subtitle {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.lesson-card .lesson-content {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 12px;
+    line-height: 1.7;
+}
+
+.lesson-card .lesson-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.lesson-tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    background: #F0F0F0;
+    color: #555;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.lesson-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.lesson-status.done {
+    background: var(--lego-green);
+    color: #FFF;
+}
+
+/* ===== 词汇卡片 ===== */
+.vocab-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    text-align: center;
+    transition: all 0.15s ease;
+    box-shadow: var(--brick-shadow-sm);
+}
+
+.vocab-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--brick-shadow);
+}
+
+.vocab-word {
+    font-family: var(--font-bold);
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--lego-blue);
+    margin-bottom: 8px;
+}
+
+.vocab-pinyin {
+    font-size: 18px;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+.vocab-meaning {
+    font-size: 14px;
+    color: var(--text-main);
+    line-height: 1.8;
+}
+
+.vocab-example {
+    font-size: 13px;
+    color: #666;
+    margin-top: 8px;
+    padding: 10px;
+    background: #F5F5F5;
+    border-radius: var(--radius-sm);
+}
+
+/* ===== 数学练习 ===== */
+.math-quiz {
+    background: #FFF;
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+    box-shadow: var(--brick-shadow);
+}
+
+.quiz-question {
+    font-family: var(--font-bold);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--lego-blue);
+    margin: 24px 0;
+    letter-spacing: 4px;
+}
+
+.quiz-input {
+    width: 140px;
+    height: 64px;
+    font-family: var(--font-bold);
+    font-size: 28px;
+    text-align: center;
+    border: 3px solid #E0E0E0;
+    background: #FAFAFA;
+    color: var(--text-main);
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.quiz-input:focus {
+    border-color: var(--lego-blue);
+    box-shadow: 0 0 0 4px rgba(0,87,184,0.15);
+}
+
+.quiz-input.correct { border-color: var(--lego-green); background: #E8F5E9; box-shadow: 0 0 0 4px rgba(0,133,43,0.15); }
+.quiz-input.wrong { border-color: var(--lego-red); background: #FFEBEE; box-shadow: 0 0 0 4px rgba(206,17,38,0.15); }
+
+.quiz-stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.quiz-stat { text-align: center; }
+.quiz-stat .label { font-size: 12px; color: #888; }
+.quiz-stat .value {
+    font-family: var(--font-bold);
+    font-size: 22px;
+    color: var(--lego-blue);
+}
+
+/* ===== 打卡日历 ===== */
+.checkin-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    background: #F0F0F0;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s ease;
+    color: var(--text-main);
+}
+
+.calendar-day.checked {
+    background: var(--lego-green);
+    background-image: linear-gradient(to bottom, var(--lego-green-light), var(--lego-green));
+    color: #FFF;
+    box-shadow: var(--brick-inset);
+}
+
+.calendar-day.today {
+    border: 3px solid var(--lego-orange);
+}
+
+.calendar-day .day-num { font-weight: 700; }
+.calendar-day .day-check { font-size: 10px; margin-top: 2px; }
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.calendar-header div {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #888;
+    padding: 4px;
+}
+
+/* ===== 积分商店 ===== */
+.reward-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+.reward-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all 0.15s ease;
+    text-align: center;
+    box-shadow: var(--brick-shadow-sm);
+}
+
+.reward-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--brick-shadow);
+}
+
+.reward-card .reward-icon {
+    font-size: 48px;
+    padding: 20px 0 8px;
+}
+
+.reward-card .reward-name {
+    font-size: 15px;
+    font-weight: 700;
+    padding: 0 12px;
+    color: var(--text-main);
+}
+
+.reward-card .reward-desc {
+    font-size: 12px;
+    color: #888;
+    padding: 4px 12px 8px;
+}
+
+.reward-card .reward-cost {
+    font-family: var(--font-bold);
+    font-size: 16px;
+    color: var(--text-main);
+    padding: 0 12px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.reward-card .reward-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: #FFF;
+    background: var(--lego-green);
+    background-image: linear-gradient(to bottom, var(--lego-green-light), var(--lego-green));
+}
+
+.reward-card .reward-btn:hover { filter: brightness(1.1); }
+.reward-card .reward-btn:active { filter: brightness(0.95); }
+
+.reward-card .reward-btn:disabled {
+    background: #BDBDBD;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* ===== 萌宠区域 ===== */
+.pet-stage {
+    background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 55%, var(--lego-green) 55%, var(--lego-green-dark) 100%);
+    border-radius: var(--radius-xl);
+    padding: 40px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 320px;
+    box-shadow: var(--brick-shadow);
+}
+
+.pet-stage::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background-image: radial-gradient(circle at 20px 10px, rgba(255,255,255,0.15) 8px, transparent 9px);
+    background-size: 40px 20px;
+}
+
+.pet-avatar {
+    font-size: 100px;
+    display: inline-block;
+    animation: petFloat 3s ease-in-out infinite;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.15));
+}
+
+.pet-info { position: relative; z-index: 2; margin-top: 16px; }
+
+.pet-name {
+    font-family: var(--font-bold);
+    font-size: 24px;
+    font-weight: 700;
+    color: #FFFFFF;
+}
+
+.pet-level {
+    font-size: 16px;
+    color: var(--lego-yellow-light);
+}
+
+.pet-exp-bar {
+    width: 220px;
+    height: 16px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    margin: 8px auto;
+    overflow: hidden;
+}
+
+.pet-exp-fill {
+    height: 100%;
+    background: var(--lego-yellow);
+    background-image: linear-gradient(to bottom, var(--lego-yellow-light) 0%, var(--lego-yellow) 100%);
+    transition: width 0.6s ease;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.3);
+}
+
+.pet-mood {
+    font-size: 14px;
+    color: #FFF;
+}
+
+.pet-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pet-action-btn {
+    padding: 10px 18px;
+    border: none;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #FFF;
+    border-radius: var(--radius-md);
+    background: var(--lego-orange);
+    background-image: linear-gradient(to bottom, var(--lego-orange-light), var(--lego-orange));
+    box-shadow: 0 3px 0 var(--lego-orange-dark), var(--brick-inset);
+}
+
+.pet-action-btn:hover { transform: translateY(-2px); }
+.pet-action-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--lego-orange-dark); }
+.pet-action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+@keyframes petFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+/* ===== 游戏卡片 ===== */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.game-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: var(--brick-shadow-sm);
+}
+
+.game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--brick-shadow);
+}
+
+.game-card .game-cover {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+}
+
+.game-card .game-info { padding: 14px; }
+
+.game-card .game-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.game-card .game-desc {
+    font-size: 12px;
+    color: #888;
+}
+
+.game-card .game-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 10px;
+    margin-top: 8px;
+    background: #F0F0F0;
+    color: #555;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+/* ===== 劳动/运动活动卡片 ===== */
+.activity-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: #FFF;
+    border-radius: var(--radius-md);
+    transition: all 0.15s ease;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    border: 2px solid #EEE;
+}
+
+.activity-card:hover { transform: translateX(4px); box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
+
+.activity-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    box-shadow: var(--brick-inset);
+}
+
+.activity-info { flex: 1; }
+.activity-name { font-size: 16px; font-weight: 700; color: var(--text-main); }
+.activity-desc { font-size: 12px; color: #888; margin-top: 2px; }
+.activity-action { flex-shrink: 0; }
+
+/* ===== 徽章 ===== */
+.badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.badge-item {
+    text-align: center;
+    padding: 16px 8px;
+    background: #FFF;
+    border-radius: var(--radius-md);
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+}
+
+.badge-item.earned {
+    border: 3px solid var(--lego-yellow);
+    background: linear-gradient(to bottom, #FFFDE7 0%, #FFF9C4 100%);
+}
+
+.badge-item.locked { opacity: 0.35; filter: grayscale(1); }
+
+.badge-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+.badge-name { font-size: 13px; font-weight: 700; color: var(--text-main); }
+.badge-desc { font-size: 11px; color: #888; margin-top: 2px; }
+
+/* ===== 拍照打卡区域 ===== */
+.checkin-photo-area {
+    text-align: center;
+    padding: 20px;
+}
+
+.checkin-photo-preview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: var(--radius-md);
+    margin: 12px auto;
+    display: block;
+    box-shadow: var(--brick-shadow-sm);
+}
+
+.checkin-video-preview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: var(--radius-md);
+    margin: 12px auto;
+    display: block;
+    box-shadow: var(--brick-shadow-sm);
+}
+
+.checkin-upload-options {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: #FFF;
+}
+
+.upload-label:hover { transform: translateY(-2px); }
+.upload-label:active { transform: translateY(1px); }
+
+.upload-label.photo {
+    background: var(--lego-blue);
+    background-image: linear-gradient(to bottom, var(--lego-blue-light), var(--lego-blue));
+    box-shadow: 0 3px 0 var(--lego-blue-dark);
+}
+
+.upload-label.video {
+    background: var(--lego-purple);
+    background-image: linear-gradient(to bottom, var(--lego-purple-light), var(--lego-purple));
+    box-shadow: 0 3px 0 #4A1D67;
+}
+
+/* ===== 家长审核卡片 ===== */
+.review-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--brick-shadow-sm);
+    margin-bottom: 14px;
+    border: 3px solid var(--lego-orange);
+}
+
+.review-card.approved { border-color: var(--lego-green); }
+.review-card.rejected { border-color: var(--lego-red); opacity: 0.7; }
+
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #FFF3E0;
+    border-bottom: 2px solid #FFE0B2;
+}
+
+.review-card.approved .review-header { background: #E8F5E9; border-bottom-color: #C8E6C9; }
+.review-card.rejected .review-header { background: #FFEBEE; border-bottom-color: #FFCDD2; }
+
+.review-header .review-icon { font-size: 24px; }
+.review-header .review-title { font-size: 15px; font-weight: 700; color: var(--text-main); flex: 1; }
+.review-header .review-time { font-size: 12px; color: #888; }
+
+.review-body { padding: 16px; }
+
+.review-media {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    background: #000;
+}
+
+.review-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 0 16px 16px;
+}
+
+.review-reason {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: #F5F5F5;
+    border-radius: var(--radius-sm);
+}
+
+/* ===== 家长任务管理 ===== */
+.task-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.task-edit-form label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.task-edit-form input,
+.task-edit-form select,
+.task-edit-form textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #E0E0E0;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-main);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.task-edit-form input:focus,
+.task-edit-form select:focus,
+.task-edit-form textarea:focus {
+    border-color: var(--lego-blue);
+}
+
+.task-edit-row {
+    display: flex;
+    gap: 10px;
+}
+
+.task-edit-row > div { flex: 1; }
+
+.edit-task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #FFF;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.06);
+    border: 2px solid #EEE;
+}
+
+.edit-task-item .edit-task-info { flex: 1; }
+.edit-task-item .edit-task-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+.edit-task-item .edit-task-meta { font-size: 12px; color: #888; }
+
+.edit-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+
+.edit-btn.edit { background: #E3F2FD; color: var(--lego-blue); }
+.edit-btn.delete { background: #FFEBEE; color: var(--lego-red); }
+.edit-btn:hover { filter: brightness(0.95); }
+
+/* ===== Toast提示 ===== */
+.toast-container {
+    position: fixed;
+    top: 76px;
+    right: 16px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    padding: 12px 18px;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 320px;
+    color: #FFF;
+    border-radius: var(--radius-md);
+    animation: toastSlide 0.3s ease;
+    box-shadow: var(--brick-shadow-sm);
+}
+
+.toast.success { background: var(--lego-green); background-image: linear-gradient(to bottom, var(--lego-green-light), var(--lego-green)); }
+.toast.error { background: var(--lego-red); background-image: linear-gradient(to bottom, var(--lego-red-light), var(--lego-red)); }
+.toast.warning { background: var(--lego-orange); background-image: linear-gradient(to bottom, var(--lego-orange-light), var(--lego-orange)); }
+.toast.info { background: var(--lego-blue); background-image: linear-gradient(to bottom, var(--lego-blue-light), var(--lego-blue)); }
+
+@keyframes toastSlide {
+    from { transform: translateX(120%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes toastOut {
+    to { transform: translateX(120%); opacity: 0; }
+}
+
+/* ===== 弹窗 ===== */
+.modal-container {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.5);
+    padding: 20px;
+}
+
+.modal-container.show { display: flex; }
+
+.modal {
+    background: #FFF;
+    border-radius: var(--radius-xl);
+    max-width: 600px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: modalIn 0.2s ease;
+    box-shadow: var(--brick-shadow);
+}
+
+@keyframes modalIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 2px solid #EEE;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--lego-blue);
+    background-image: linear-gradient(135deg, var(--lego-blue-light), var(--lego-blue));
+    color: #FFF;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.modal-header h3 {
+    font-family: var(--font-bold);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.modal-close {
+    background: rgba(0,0,0,0.2);
+    border: none;
+    color: #FFF;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    transition: all 0.15s ease;
+}
+
+.modal-close:hover { background: rgba(0,0,0,0.35); }
+
+.modal-body { padding: 20px; }
+
+.modal-footer {
+    padding: 14px 20px;
+    border-top: 2px solid #EEE;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ===== 烟花特效 ===== */
+.firework-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3000;
+}
+
+.firework {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: fireworkBoom 1s ease-out forwards;
+}
+
+@keyframes fireworkBoom {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 空状态 ===== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #888;
+}
+
+.empty-state .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-state .empty-text { font-size: 16px; }
+
+/* ===== 列表项 ===== */
+.list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #EEE;
+}
+
+.list-item:last-child { border-bottom: none; }
+
+.list-item-icon { font-size: 20px; flex-shrink: 0; }
+.list-item-content { flex: 1; }
+.list-item-title { font-size: 14px; font-weight: 600; color: var(--text-main); }
+.list-item-subtitle { font-size: 12px; color: #888; }
+.list-item-value { font-size: 14px; font-weight: 700; }
+.list-item-value.plus { color: var(--lego-green); }
+.list-item-value.minus { color: var(--lego-red); }
+
+/* ===== 动画 ===== */
+.fade-in { animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.bounce { animation: bounce 0.4s ease; }
+
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+/* ===== 分隔线 ===== */
+.lego-divider {
+    height: 4px;
+    background: repeating-linear-gradient(90deg,
+        var(--lego-red) 0, var(--lego-red) 20px,
+        var(--lego-yellow) 20px, var(--lego-yellow) 40px,
+        var(--lego-blue) 40px, var(--lego-blue) 60px,
+        var(--lego-green) 60px, var(--lego-green) 80px);
+    border-radius: 2px;
+    margin: 16px 0;
+}
+
+/* ===== 响应式：平板 ===== */
+@media (max-width: 1024px) {
+    :root { --sidebar-width: 230px; }
+
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .home-hero .hero-emoji { font-size: 44px; }
+    .page-title { font-size: 24px; }
+}
+
+/* ===== 响应式：手机 ===== */
+@media (max-width: 768px) {
+    :root { --sidebar-width: 260px; }
+
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-close { display: block; }
+    .main-content { margin-left: 0; }
+    .menu-toggle { display: flex; }
+
+    .content-area { padding: 12px; padding-bottom: 60px; }
+    .topbar { padding: 0 10px; gap: 8px; }
+    .topbar-date { font-size: 11px; flex: 1; }
+    .topbar-right { gap: 6px; }
+    .topbar-stat { padding: 4px 10px; font-size: 12px; }
+    .topbar-stat .stat-icon { font-size: 14px; }
+    .topbar-pet { width: 36px; height: 36px; font-size: 18px; }
+    .parent-mode-badge { font-size: 10px; padding: 3px 8px; }
+
+    .home-hero { padding: 20px; }
+    .home-hero h1 { font-size: 20px; }
+    .home-hero p { font-size: 13px; }
+    .home-hero .hero-emoji { font-size: 36px; right: 12px; }
+
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 12px; gap: 10px; }
+    .stat-card .stat-icon-lg { width: 44px; height: 44px; font-size: 22px; }
+    .stat-card .stat-info h3 { font-size: 22px; }
+    .stat-card .stat-info p { font-size: 11px; }
+
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .page-title { font-size: 20px; }
+    .lego-panel { padding: 14px; }
+
+    .quiz-question { font-size: 32px; }
+    .quiz-input { width: 110px; height: 52px; font-size: 24px; }
+
+    .pet-avatar { font-size: 72px; }
+    .pet-stage { min-height: 260px; padding: 28px 14px; }
+
+    .subject-grid { grid-template-columns: 1fr; }
+
+    .reward-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .reward-card .reward-icon { font-size: 36px; padding: 14px 0 6px; }
+    .reward-card .reward-name { font-size: 14px; }
+    .reward-card .reward-cost { font-size: 14px; }
+
+    .game-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .game-card .game-cover { height: 80px; font-size: 36px; }
+    .game-card .game-info { padding: 10px; }
+    .game-card .game-name { font-size: 14px; }
+    .game-card .game-desc { font-size: 11px; }
+
+    .badge-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .badge-icon { font-size: 32px; }
+    .badge-name { font-size: 11px; }
+    .badge-desc { font-size: 10px; }
+
+    .modal { max-width: 100%; max-height: 90vh; }
+    .modal-header { padding: 14px; }
+    .modal-body { padding: 14px; }
+
+    .toast-container { top: 66px; right: 10px; left: 10px; }
+    .toast { max-width: none; }
+
+    .calendar-day { font-size: 12px; }
+
+    .activity-card { padding: 10px; gap: 10px; }
+    .activity-icon { width: 44px; height: 44px; font-size: 22px; }
+    .activity-name { font-size: 14px; }
+    .activity-desc { font-size: 11px; }
+
+    .vocab-word { font-size: 30px; }
+    .vocab-pinyin { font-size: 16px; }
+
+    .pet-actions { gap: 6px; }
+    .pet-action-btn { padding: 8px 14px; font-size: 12px; }
+
+    .review-actions { flex-wrap: wrap; }
+    .task-edit-row { flex-direction: column; }
+}
+
+/* ===== 响应式：小手机 ===== */
+@media (max-width: 380px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .reward-grid { grid-template-columns: 1fr; }
+    .game-grid { grid-template-columns: 1fr; }
+    .badge-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ===== 打印 ===== */
+@media print {
+    .sidebar, .topbar, .menu-toggle, .firework-container, .toast-container { display: none; }
+    .main-content { margin-left: 0; }
+    body { background: #FFF; }
+    body::before { display: none; }
+}
