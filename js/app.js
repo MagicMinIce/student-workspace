@@ -268,6 +268,29 @@ const UI = {
 
 // ===== 模块渲染器 =====
 const Modules = {
+    // ===== 辅助方法：课文原文加注音 =====
+    renderTextWithPinyin(text) {
+        if (!text) return '';
+        const paragraphs = text.split('\n\n');
+        const hasPinyin = (typeof pinyinPro !== 'undefined');
+        return paragraphs.map(para => {
+            const chars = [...para];
+            let html = '';
+            for (const ch of chars) {
+                if (/[\u4e00-\u9fff]/.test(ch)) {
+                    let py = '';
+                    if (hasPinyin) {
+                        try { py = pinyinPro.pinyin(ch, { type: 'array' })[0] || ''; } catch(e) {}
+                    }
+                    html += '<ruby>' + ch + '<rt>' + py + '</rt></ruby>';
+                } else {
+                    html += ch;
+                }
+            }
+            return '<p class="lesson-para">' + html + '</p>';
+        }).join('');
+    },
+
     // ===== 首页 =====
     home() {
         const d = Store.data;
@@ -682,7 +705,7 @@ const Modules = {
         const textHtml = lessonText ? `
             <div class="lego-panel" style="margin-bottom:16px;">
                 <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📖 课文原文</h3>
-                <div class="lesson-text-content">${lessonText.replace(/\n/g, '<br><br>')}</div>
+                <div class="lesson-text-content">${Modules.renderTextWithPinyin(lessonText)}</div>
             </div>
         ` : '';
 
@@ -733,7 +756,7 @@ const Modules = {
                                 <span style="font-size:12px;color:#888;">${strokesList.length}笔</span>
                             </div>
                             <div class="stroke-order-list">
-                                ${strokesList.map((s, si) => `<span class="stroke-item"><span class="stroke-num">${si+1}</span><span class="stroke-name">${s}</span></span>`).join('')}
+                                ${strokesList.map((s, si) => { const sym = (typeof STROKE_SYMBOLS !== 'undefined' ? STROKE_SYMBOLS[s] : '') || ''; return `<span class="stroke-item"><span class="stroke-num">${si+1}</span>${sym ? `<span class="stroke-symbol">${sym}</span>` : ''}<span class="stroke-name">${s}</span></span>`; }).join('')}
                             </div>
                         </div>
                     ` : ''}

@@ -2389,16 +2389,37 @@ body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center;
 
 /* 课文原文 */
 .lesson-text-content {
-    padding: 16px;
+    padding: 14px 16px;
     background: #FFFDE7;
     border: 2px solid #FCD116;
     border-radius: 10px;
     font-size: 15px;
     color: #3A3A3A;
-    line-height: 2.2;
-    max-height: 350px;
+    line-height: 1.6;
+    max-height: 380px;
     overflow-y: auto;
+}
+
+.lesson-para {
+    margin: 0 0 6px 0;
     text-indent: 2em;
+}
+
+.lesson-para:last-child {
+    margin-bottom: 0;
+}
+
+.lesson-text-content ruby {
+    ruby-position: over;
+    ruby-align: center;
+}
+
+.lesson-text-content rt {
+    font-size: 10px;
+    color: #999;
+    font-family: 'Nunito', sans-serif;
+    line-height: 1;
+    padding-bottom: 1px;
 }
 
 /* 笔顺展示 */
@@ -2430,11 +2451,11 @@ body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center;
 .stroke-item {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
     background: #E3F2FD;
     border: 1px solid #BBDEFB;
     border-radius: 6px;
-    padding: 3px 8px;
+    padding: 4px 8px;
 }
 
 .stroke-num {
@@ -2451,8 +2472,17 @@ body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center;
     flex-shrink: 0;
 }
 
+.stroke-symbol {
+    font-size: 24px;
+    color: #0057B8;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 24px;
+    text-align: center;
+}
+
 .stroke-name {
-    font-size: 13px;
+    font-size: 12px;
     color: #0057B8;
     font-weight: 600;
 }
