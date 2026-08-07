@@ -2511,6 +2511,16 @@ const App = {
 
             <div class="lego-divider"></div>
 
+            <div style="margin-bottom:16px;">
+                <h4 style="font-size:14px;font-weight:bold;color:#3A3A3A;margin-bottom:8px;">\uD83D\uDD04 \u540C\u6B65\u64CD\u4F5C</h4>
+                <button class="lego-btn lego-btn-green" style="width:100%;font-size:14px;padding:12px;" onclick="App.refreshFromCloud()">
+                    <span>\uD83D\uDD04</span> <span>\u4ECE\u4E91\u7AEF\u5237\u65B0\u6570\u636E</span>
+                </button>
+                <p style="font-size:11px;color:#999;margin-top:6px;text-align:center;">\u70B9\u51FB\u7ACB\u5373\u4ECE\u4E91\u7AEF\u62C9\u53D6\u6700\u65B0\u6570\u636E\uFF08\u5B9E\u65F6\u540C\u6B65 + 10\u79D2\u8F6E\u8BE2\u5145\u95F4\uFF09</p>
+            </div>
+
+            <div class="lego-divider"></div>
+
             <div style="margin-bottom:8px;">
                 <h4 style="font-size:14px;font-weight:bold;color:#3A3A3A;margin-bottom:8px;">\uD83D\uDCC1 \u624B\u52A8\u5B58\u6863\uFF08\u5907\u7528\uFF09</h4>
                 <div style="display:flex;gap:8px;">
@@ -2602,6 +2612,23 @@ const App = {
             UI.closeModal();
             UI.toast('\u4E91\u7AEF\u540C\u6B65\u5DF2\u5173\u95ED', 'info');
         });
+    },
+
+    // 从云端强制刷新数据
+    async refreshFromCloud() {
+        if (!CloudSync.enabled || !CloudSync.roomId) {
+            UI.toast('\u8BF7\u5148\u5F00\u542F\u4E91\u7AEF\u540C\u6B65', 'warning');
+            return;
+        }
+        UI.toast('\u23F3 \u6B63\u5728\u4ECE\u4E91\u7AEF\u62C9\u53D6...', 'info', 2000);
+        const updated = await CloudSync.pull(true);
+        if (updated) {
+            UI.toast('\u2705 \u5DF2\u4ECE\u4E91\u7AEF\u540C\u6B65\u6700\u65B0\u6570\u636E\uFF01', 'success');
+            // 刷新弹窗内容
+            setTimeout(() => this.showSyncStatus(), 300);
+        } else {
+            UI.toast('\u2705 \u672C\u5730\u5DF2\u662F\u6700\u65B0\u6570\u636E\uFF0C\u65E0\u9700\u66F4\u65B0', 'info');
+        }
     },
 
     exportData() {

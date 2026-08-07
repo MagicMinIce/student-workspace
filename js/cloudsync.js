@@ -14,6 +14,7 @@ const CloudSync = {
     roomId: null,
     listeningChannel: null,
     pushTimer: null,
+    pollTimer: null,
     isPushing: false,
     isPulling: false,
     enabled: false,
@@ -223,8 +224,9 @@ const CloudSync = {
     },
 
     // ===== 手动从云端拉取最新数据 =====
-    async pull() {
-        if (!this.enabled || !this.roomId || this.isPulling || !this.client) return;
+    async pull(force) {
+        if (!this.enabled || !this.roomId || !this.client) return;
+        if (this.isPulling && !force) return;
 
         try {
             const { data, error } = await this.client
@@ -237,8 +239,8 @@ const CloudSync = {
             if (!data) return;
 
             const cloudTime = data.timestamp || 0;
-            if (cloudTime > this.lastCloudTimestamp) {
-                console.log('[CloudSync] pull found newer data, cloud:', cloudTime, 'local:', this.lastCloudTimestamp);
+            if (force || cloudTime > this.lastCloudTimestamp) {
+                console.log('[CloudSync] pull' + (force ? ' (force)' : '') + ' cloud:', cloudTime, 'local:', this.lastCloudTimestamp);
                 this.isPulling = true;
                 Store.data = Object.assign(
                     JSON.parse(JSON.stringify(Store.defaultData)),
@@ -252,10 +254,13 @@ const CloudSync = {
                 App.render();
                 this.isPulling = false;
                 console.log('[CloudSync] pull completed, pendingReviews:', Store.data.pendingReviews?.length || 0);
+                return true;
             }
         } catch (e) {
             console.error('[CloudSync] pull error:', e);
+            this.isPulling = false;
         }
+        return false;
     },
 
     // ===== 实时监听云端数据变化 =====
@@ -263,6 +268,14 @@ const CloudSync = {
         if (this.listeningChannel && this.client) {
             this.client.removeChannel(this.listeningChannel);
         }
+
+        // 定期轮询兜底（10秒一次），防止 WebSocket 断连时漏更新
+        this.stopPolling();
+        this.pollTimer = setInterval(() => {
+            if (this.enabled && !this.isPushing && !this.isPulling) {
+                this.pull();
+            }
+        }, 10000);
 
         this.listeningChannel = this.client
             .channel('workspace-' + this.roomId)
@@ -309,8 +322,16 @@ const CloudSync = {
                     // 连接建立后主动拉取一次最新数据
                     this.pull();
                 } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                    this.lastError = '实时连接异常';
+                    console.log('[CloudSync] channel error, will retry in 5s');
+                    this.lastError = '实时连接异常，使用轮询同步';
                     this.updateStatus('error');
+                    // 5秒后自动重连
+                    setTimeout(() => {
+                        if (this.enabled && this.roomId) {
+                            console.log('[CloudSync] retrying connection...');
+                            this.startListening();
+                        }
+                    }, 5000);
                 }
             });
 
@@ -323,7 +344,16 @@ const CloudSync = {
             this.client.removeChannel(this.listeningChannel);
             this.listeningChannel = null;
         }
+        this.stopPolling();
         this.updateStatus('disabled');
+    },
+
+    // ===== 停止轮询 =====
+    stopPolling() {
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        }
     },
 
     // ===== 本地数据变化时触发 =====
@@ -337,12 +367,12 @@ const CloudSync = {
 
     // ===== 兼容旧接口 =====
     startPolling() { this.startListening(); },
-    stopPolling() { this.stopListening(); },
 
     // ===== 关闭同步 =====
     disable() {
         this.enabled = false;
         this.stopListening();
+        this.stopPolling();
         clearTimeout(this.pushTimer);
         this.saveSettings();
         this.clearUrlHash();
