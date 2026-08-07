@@ -40,9 +40,7 @@ const Store = {
         writingRecords: [],
         mistakeBook: [],
         reviewProgress: {},
-        punctuationProgress: {},
-        // 课文图片（key: 课文标题, value: 图片URL或base64）
-        lessonImages: {}
+        punctuationProgress: {}
     },
 
     init() {
@@ -270,40 +268,6 @@ const UI = {
 
 // ===== 模块渲染器 =====
 const Modules = {
-    // ===== 辅助方法：获取课文图片 =====
-    getLessonImage(lessonTitle) {
-        const defaultImages = (typeof LESSON_IMAGES !== 'undefined') ? LESSON_IMAGES : {};
-        return Store.data.lessonImages[lessonTitle] || defaultImages[lessonTitle] || '';
-    },
-
-    // ===== 辅助方法：渲染课文图片区（含上传/贴链接） =====
-    renderLessonImageSection(lessonTitle, inModal) {
-        const imgUrl = Modules.getLessonImage(lessonTitle);
-        const safeTitle = lessonTitle.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        if (imgUrl) {
-            return `
-                <div class="lesson-image-wrapper${inModal ? ' modal' : ''}">
-                    <img src="${imgUrl}" alt="${safeTitle}" class="lesson-image" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                    <div class="lesson-image-error" style="display:none;">图片加载失败，请重新上传或更换链接</div>
-                    <div class="lesson-image-actions">
-                        <button class="lego-btn lego-btn-blue" style="font-size:12px;padding:6px 12px;" onclick="Modules.showLessonImageUpload('${safeTitle}')">🔄 更换图片</button>
-                    </div>
-                </div>
-            `;
-        }
-        return `
-            <div class="lesson-image-empty${inModal ? ' modal' : ''}">
-                <div style="font-size:40px;margin-bottom:8px;">🖼️</div>
-                <div style="font-size:14px;font-weight:700;color:#666;margin-bottom:6px;">还没有课文图片</div>
-                <div style="font-size:12px;color:#888;margin-bottom:12px;">可以从小红书、教材网等找到干净课本图后上传</div>
-                <div style="display:flex;gap:8px;justify-content:center;">
-                    <button class="lego-btn lego-btn-green" style="font-size:12px;padding:6px 14px;" onclick="Modules.showLessonImageUpload('${safeTitle}')">📤 上传图片</button>
-                    <button class="lego-btn lego-btn-yellow" style="font-size:12px;padding:6px 14px;" onclick="Modules.showLessonImageUrlInput('${safeTitle}')">🔗 粘贴链接</button>
-                </div>
-            </div>
-        `;
-    },
-
     // ===== 首页 =====
     home() {
         const d = Store.data;
@@ -713,17 +677,8 @@ const Modules = {
             }).join('');
         }
 
-        // 课文原文图片
-        const textHtml = `
-            <div class="lego-panel" style="margin-bottom:16px;">
-                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📖 课文原文</h3>
-                ${Modules.renderLessonImageSection(currentLesson.title, false)}
-            </div>
-        `;
-
         return `
             ${banner}
-            ${textHtml}
             <div class="lego-panel" style="margin-bottom:16px;">
                 <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📋 今日学习步骤（拍照打卡→家长审核→获得积分）</h3>
                 ${stepsHtml}
@@ -1100,12 +1055,6 @@ const Modules = {
         const lesson = COURSE_DATA.chinese.units.flatMap(u => u.lessons).find(l => l.title === title);
         if (!lesson) return;
         const isDone = Store.data.lessonProgress[title] === 'done';
-        const textHtml = `
-            <div style="margin-bottom:12px;">
-                <strong style="font-size:15px;color:#3A3A3A;">📖 课文原文</strong>
-                ${Modules.renderLessonImageSection(title, true)}
-            </div>
-        `;
         const wordsHtml = lesson.words.map(w => `<span style="display:inline-block;padding:4px 10px;margin:3px;background:#0057B8;color:#FFF;border:2px solid #E0E0E0;font-size:16px;border-radius:6px;">${w}</span>`).join('');
         let poemsHtml = '';
         if (lesson.poems) {
@@ -1118,7 +1067,6 @@ const Modules = {
             `).join('');
         }
         UI.modal(lesson.title, `
-            ${textHtml}
             <div style="margin-bottom:12px;">
                 <strong style="font-size:15px;color:#3A3A3A;">📌 学习要点</strong>
                 <p style="margin-top:6px;font-size:14px;color:#555;line-height:1.8;">${lesson.keyPoints}</p>
@@ -1156,78 +1104,6 @@ const Modules = {
         Store.save();
         UI.toast('🎉 完成课文学习！+' + lesson.points + ' 💎', 'success');
         UI.fireworks();
-        App.render();
-    },
-
-    // ===== 课文图片上传/链接 =====
-    showLessonImageUpload(lessonTitle) {
-        const safeTitle = lessonTitle.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        const inputId = 'lesson-img-upload-' + Date.now();
-        UI.modal('上传课文图片', `
-            <div style="text-align:center;padding:12px 0;">
-                <div style="font-size:48px;margin-bottom:12px;">📤</div>
-                <p style="color:#666;font-size:14px;margin-bottom:16px;">选择课本原文图片（建议找干净、清晰的页面截图）</p>
-                <input type="file" id="${inputId}" accept="image/*" style="display:none;" onchange="Modules.handleLessonImageUpload(this,'${safeTitle}')">
-                <button class="lego-btn lego-btn-green" style="font-size:14px;padding:10px 24px;" onclick="document.getElementById('${inputId}').click()">选择图片文件</button>
-                <p style="margin-top:12px;font-size:12px;color:#999;">支持 JPG、PNG、GIF、WEBP</p>
-            </div>
-        `);
-    },
-
-    handleLessonImageUpload(input, lessonTitle) {
-        const file = input.files[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            UI.toast('请选择图片文件', 'error');
-            return;
-        }
-        // 限制大小：base64 存 localStorage，单图建议不超过 800KB
-        if (file.size > 2 * 1024 * 1024) {
-            UI.toast('图片太大，建议压缩到 2MB 以内', 'error');
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            Store.data.lessonImages[lessonTitle] = e.target.result;
-            Store.save();
-            UI.closeModal();
-            UI.toast('课文图片已保存', 'success');
-            App.render();
-        };
-        reader.onerror = function() {
-            UI.toast('图片读取失败', 'error');
-        };
-        reader.readAsDataURL(file);
-    },
-
-    showLessonImageUrlInput(lessonTitle) {
-        const safeTitle = lessonTitle.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        const inputId = 'lesson-img-url-' + Date.now();
-        UI.modal('粘贴课文图片链接', `
-            <div style="padding:8px 0;">
-                <p style="color:#666;font-size:14px;margin-bottom:12px;">把图片地址粘贴到下面（小红书可右键图片“复制图片地址”）</p>
-                <input type="text" id="${inputId}" placeholder="https://..." style="width:100%;padding:10px;border:2px solid #E0E0E0;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                <button class="lego-btn lego-btn-green" style="width:100%;margin-top:12px;padding:10px 0;" onclick="Modules.saveLessonImageUrl('${safeTitle}','${inputId}')">保存链接</button>
-            </div>
-        `);
-    },
-
-    saveLessonImageUrl(lessonTitle, inputId) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-        let url = input.value.trim();
-        if (!url) {
-            UI.toast('请输入图片链接', 'error');
-            return;
-        }
-        // 简单补全协议
-        if (!/^https?:\/\//i.test(url)) {
-            url = 'https://' + url;
-        }
-        Store.data.lessonImages[lessonTitle] = url;
-        Store.save();
-        UI.closeModal();
-        UI.toast('课文图片链接已保存', 'success');
         App.render();
     },
 

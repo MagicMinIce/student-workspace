@@ -2387,55 +2387,6 @@ body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center;
     background: #FFF3E0;
 }
 
-/* 课文原文图片 */
-.lesson-image-wrapper {
-    background: #FFFDE7;
-    border: 2px solid #FCD116;
-    border-radius: 10px;
-    padding: 12px;
-    text-align: center;
-}
-
-.lesson-image-wrapper.modal {
-    margin-top: 8px;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.lesson-image {
-    max-width: 100%;
-    border-radius: 8px;
-    display: block;
-    margin: 0 auto;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.lesson-image-error {
-    padding: 20px;
-    background: #FFEBEE;
-    color: #C62828;
-    border-radius: 8px;
-    font-size: 13px;
-    text-align: center;
-}
-
-.lesson-image-actions {
-    margin-top: 10px;
-    text-align: center;
-}
-
-.lesson-image-empty {
-    background: #FFFDE7;
-    border: 2px dashed #FCD116;
-    border-radius: 10px;
-    padding: 24px 16px;
-    text-align: center;
-}
-
-.lesson-image-empty.modal {
-    margin-top: 8px;
-}
-
 /* 笔顺展示 */
 .stroke-order-section {
     margin-top: 10px;
