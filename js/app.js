@@ -268,20 +268,17 @@ const UI = {
 
 // ===== 模块渲染器 =====
 const Modules = {
-    // ===== 辅助方法：课文原文加注音 =====
+    // ===== 辅助方法：课文原文加注音（使用本地拼音字典）=====
     renderTextWithPinyin(text) {
         if (!text) return '';
+        const pm = (typeof PINYIN_MAP !== 'undefined') ? PINYIN_MAP : {};
         const paragraphs = text.split('\n\n');
-        const hasPinyin = (typeof pinyinPro !== 'undefined');
         return paragraphs.map(para => {
             const chars = [...para];
             let html = '';
             for (const ch of chars) {
                 if (/[\u4e00-\u9fff]/.test(ch)) {
-                    let py = '';
-                    if (hasPinyin) {
-                        try { py = pinyinPro.pinyin(ch, { type: 'array' })[0] || ''; } catch(e) {}
-                    }
+                    const py = pm[ch] || '';
                     html += '<ruby>' + ch + '<rt>' + py + '</rt></ruby>';
                 } else {
                     html += ch;
