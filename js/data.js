@@ -312,84 +312,80 @@ const COURSE_DATA = {
         icon: "🔤",
         color: "#805ad5",
         gradient: "linear-gradient(135deg, #b794f4 0%, #805ad5 100%)",
-        categories: [
-            {
-                name: "颜色 Colors",
-                icon: "🎨",
-                words: [
-                    { word: "red", meaning: "红色", example: "I like red apples." },
-                    { word: "blue", meaning: "蓝色", example: "The sky is blue." },
-                    { word: "yellow", meaning: "黄色", example: "I have a yellow pencil." },
-                    { word: "green", meaning: "绿色", example: "The grass is green." },
-                    { word: "orange", meaning: "橙色", example: "An orange is orange." },
-                    { word: "purple", meaning: "紫色", example: "I like purple flowers." },
-                    { word: "pink", meaning: "粉色", example: "My bag is pink." },
-                    { word: "black", meaning: "黑色", example: "My shoes are black." },
-                    { word: "white", meaning: "白色", example: "The cloud is white." },
-                    { word: "brown", meaning: "棕色", example: "The bear is brown." }
-                ]
-            },
-            {
-                name: "动物 Animals",
-                icon: "🐶",
-                words: [
-                    { word: "cat", meaning: "猫", example: "I have a cat." },
-                    { word: "dog", meaning: "狗", example: "The dog is running." },
-                    { word: "bird", meaning: "鸟", example: "A bird can fly." },
-                    { word: "fish", meaning: "鱼", example: "Fish swim in water." },
-                    { word: "rabbit", meaning: "兔子", example: "The rabbit is white." },
-                    { word: "bear", meaning: "熊", example: "The bear is big." },
-                    { word: "monkey", meaning: "猴子", example: "The monkey is cute." },
-                    { word: "elephant", meaning: "大象", example: "The elephant is huge." },
-                    { word: "tiger", meaning: "老虎", example: "The tiger is strong." },
-                    { word: "panda", meaning: "熊猫", example: "Pandas are from China." }
-                ]
-            },
-            {
-                name: "数字 Numbers",
-                icon: "🔢",
-                words: [
-                    { word: "one", meaning: "一", example: "I have one book." },
-                    { word: "two", meaning: "二", example: "Two eyes to see." },
-                    { word: "three", meaning: "三", example: "Three little pigs." },
-                    { word: "four", meaning: "四", example: "Four seasons a year." },
-                    { word: "five", meaning: "五", example: "Five fingers on a hand." },
-                    { word: "six", meaning: "六", example: "Six is a lucky number." },
-                    { word: "seven", meaning: "七", example: "Seven days a week." },
-                    { word: "eight", meaning: "八", example: "Eight is my lucky number." },
-                    { word: "nine", meaning: "九", example: "Nine players on a team." },
-                    { word: "ten", meaning: "十", example: "I have ten toes." }
-                ]
-            },
-            {
-                name: "食物 Food",
-                icon: "🍎",
-                words: [
-                    { word: "apple", meaning: "苹果", example: "I eat an apple every day." },
-                    { word: "banana", meaning: "香蕉", example: "Monkeys love bananas." },
-                    { word: "bread", meaning: "面包", example: "I have bread for breakfast." },
-                    { word: "milk", meaning: "牛奶", example: "I drink milk every morning." },
-                    { word: "cake", meaning: "蛋糕", example: "Happy birthday! Have some cake." },
-                    { word: "rice", meaning: "米饭", example: "We eat rice every day." },
-                    { word: "egg", meaning: "鸡蛋", example: "I like boiled eggs." },
-                    { word: "water", meaning: "水", example: "Drink more water." }
-                ]
-            },
-            {
-                name: "日常用语 Daily English",
-                icon: "💬",
-                words: [
-                    { word: "Hello", meaning: "你好", example: "Hello! How are you?" },
-                    { word: "Goodbye", meaning: "再见", example: "Goodbye! See you tomorrow." },
-                    { word: "Thank you", meaning: "谢谢", example: "Thank you very much!" },
-                    { word: "Sorry", meaning: "对不起", example: "Sorry, I'm late." },
-                    { word: "Good morning", meaning: "早上好", example: "Good morning, teacher!" },
-                    { word: "Good night", meaning: "晚安", example: "Good night, Mom!" },
-                    { word: "Please", meaning: "请", example: "Please help me." },
-                    { word: "Yes", meaning: "是的", example: "Yes, I can." },
-                    { word: "No", meaning: "不是", example: "No, thank you." }
-                ]
-            }
+        // 每日课程：每天学2-3个单词，按顺序推进
+        dailyLessons: [
+            { day: 1, title: "颜色入门 (1)", icon: "🎨", words: [
+                { word: "red", meaning: "红色", emoji: "🔴", sentences: ["I like red apples.", "The red flower is beautiful.", "My shirt is red."] },
+                { word: "blue", meaning: "蓝色", emoji: "💙", sentences: ["The sky is blue.", "I have a blue pen.", "Her eyes are blue."] },
+                { word: "yellow", meaning: "黄色", emoji: "💛", sentences: ["I have a yellow pencil.", "The sun is yellow.", "A yellow bird is singing."] }
+            ]},
+            { day: 2, title: "颜色入门 (2)", icon: "🎨", words: [
+                { word: "green", meaning: "绿色", emoji: "💚", sentences: ["The grass is green.", "I like green trees.", "Green is my favorite color."] },
+                { word: "orange", meaning: "橙色", emoji: "🟠", sentences: ["An orange is orange.", "I have an orange bag.", "The orange sunset is pretty."] },
+                { word: "purple", meaning: "紫色", emoji: "🟣", sentences: ["I like purple flowers.", "She has a purple dress.", "The purple grapes are sweet."] }
+            ]},
+            { day: 3, title: "颜色入门 (3)", icon: "🎨", words: [
+                { word: "pink", meaning: "粉色", emoji: "🩷", sentences: ["My bag is pink.", "The pink rose is lovely.", "She likes pink shoes."] },
+                { word: "black", meaning: "黑色", emoji: "🖤", sentences: ["My shoes are black.", "The cat is black.", "I have a black pen."] },
+                { word: "white", meaning: "白色", emoji: "🤍", sentences: ["The cloud is white.", "I have a white shirt.", "The snow is white."] }
+            ]},
+            { day: 4, title: "颜色入门 (4)", icon: "🎨", words: [
+                { word: "brown", meaning: "棕色", emoji: "🤎", sentences: ["The bear is brown.", "I have brown hair.", "The table is brown."] }
+            ]},
+            { day: 5, title: "动物朋友 (1)", icon: "🐶", words: [
+                { word: "cat", meaning: "猫", emoji: "🐱", sentences: ["I have a cat.", "The cat is sleeping.", "My cat likes milk."] },
+                { word: "dog", meaning: "狗", emoji: "🐶", sentences: ["The dog is running.", "I love my dog.", "The dog can jump."] },
+                { word: "bird", meaning: "鸟", emoji: "🐦", sentences: ["A bird can fly.", "The bird is singing.", "I see a blue bird."] }
+            ]},
+            { day: 6, title: "动物朋友 (2)", icon: "🐶", words: [
+                { word: "fish", meaning: "鱼", emoji: "🐟", sentences: ["Fish swim in water.", "I have a pet fish.", "The fish is small."] },
+                { word: "rabbit", meaning: "兔子", emoji: "🐰", sentences: ["The rabbit is white.", "A rabbit can hop.", "I like the cute rabbit."] },
+                { word: "bear", meaning: "熊", emoji: "🐻", sentences: ["The bear is big.", "Bears like honey.", "The brown bear is strong."] }
+            ]},
+            { day: 7, title: "动物朋友 (3)", icon: "🐶", words: [
+                { word: "monkey", meaning: "猴子", emoji: "🐵", sentences: ["The monkey is cute.", "Monkeys like bananas.", "The monkey can climb trees."] },
+                { word: "elephant", meaning: "大象", emoji: "🐘", sentences: ["The elephant is huge.", "Elephants have long noses.", "I saw an elephant at the zoo."] },
+                { word: "tiger", meaning: "老虎", emoji: "🐯", sentences: ["The tiger is strong.", "Tigers are orange and black.", "The tiger can run fast."] },
+                { word: "panda", meaning: "熊猫", emoji: "🐼", sentences: ["Pandas are from China.", "The panda eats bamboo.", "I love pandas!"] }
+            ]},
+            { day: 8, title: "数字乐园 (1)", icon: "🔢", words: [
+                { word: "one", meaning: "一", emoji: "1️⃣", sentences: ["I have one book.", "One plus one is two.", "Give me one apple."] },
+                { word: "two", meaning: "二", emoji: "2️⃣", sentences: ["Two eyes to see.", "I have two hands.", "Two and two is four."] },
+                { word: "three", meaning: "三", emoji: "3️⃣", sentences: ["Three little pigs.", "I have three pens.", "Three is my lucky number."] }
+            ]},
+            { day: 9, title: "数字乐园 (2)", icon: "🔢", words: [
+                { word: "four", meaning: "四", emoji: "4️⃣", sentences: ["Four seasons a year.", "A table has four legs.", "I am four years old."] },
+                { word: "five", meaning: "五", emoji: "5️⃣", sentences: ["Five fingers on a hand.", "I have five apples.", "Give me five!"] },
+                { word: "six", meaning: "六", emoji: "6️⃣", sentences: ["Six is a lucky number.", "I have six books.", "Six minus two is four."] }
+            ]},
+            { day: 10, title: "数字乐园 (3)", icon: "🔢", words: [
+                { word: "seven", meaning: "七", emoji: "7️⃣", sentences: ["Seven days a week.", "I get up at seven.", "Seven is my favorite number."] },
+                { word: "eight", meaning: "八", emoji: "8️⃣", sentences: ["Eight is my lucky number.", "An octopus has eight legs.", "I am eight years old."] },
+                { word: "nine", meaning: "九", emoji: "9️⃣", sentences: ["Nine players on a team.", "I have nine toys.", "Nine minus three is six."] },
+                { word: "ten", meaning: "十", emoji: "🔟", sentences: ["I have ten toes.", "Ten is a round number.", "Give me ten stickers."] }
+            ]},
+            { day: 11, title: "美食天地 (1)", icon: "🍎", words: [
+                { word: "apple", meaning: "苹果", emoji: "🍎", sentences: ["I eat an apple every day.", "The apple is red and sweet.", "An apple a day keeps the doctor away."] },
+                { word: "banana", meaning: "香蕉", emoji: "🍌", sentences: ["Monkeys love bananas.", "I like yellow bananas.", "The banana is long."] },
+                { word: "bread", meaning: "面包", emoji: "🍞", sentences: ["I have bread for breakfast.", "The bread is soft.", "Mom makes good bread."] }
+            ]},
+            { day: 12, title: "美食天地 (2)", icon: "🍎", words: [
+                { word: "milk", meaning: "牛奶", emoji: "🥛", sentences: ["I drink milk every morning.", "The milk is white.", "Cats like milk too."] },
+                { word: "cake", meaning: "蛋糕", emoji: "🎂", sentences: ["Happy birthday! Have some cake.", "The cake is sweet.", "I want a piece of cake."] },
+                { word: "egg", meaning: "鸡蛋", emoji: "🥚", sentences: ["I like boiled eggs.", "The egg is in the nest.", "I eat an egg for breakfast."] },
+                { word: "water", meaning: "水", emoji: "💧", sentences: ["Drink more water.", "The water is clean.", "I want a glass of water."] }
+            ]},
+            { day: 13, title: "日常用语 (1)", icon: "💬", words: [
+                { word: "Hello", meaning: "你好", emoji: "👋", sentences: ["Hello! How are you?", "Hello, my name is Tom.", "Say hello to your mom."] },
+                { word: "Goodbye", meaning: "再见", emoji: "👋", sentences: ["Goodbye! See you tomorrow.", "Say goodbye to your friends.", "Goodbye, have a nice day!"] },
+                { word: "Thank you", meaning: "谢谢", emoji: "🙏", sentences: ["Thank you very much!", "Thank you for your help.", "Say thank you to the teacher."] }
+            ]},
+            { day: 14, title: "日常用语 (2)", icon: "💬", words: [
+                { word: "Sorry", meaning: "对不起", emoji: "😔", sentences: ["Sorry, I am late.", "I am sorry, I did not mean it.", "Say sorry to your sister."] },
+                { word: "Good morning", meaning: "早上好", emoji: "🌅", sentences: ["Good morning, teacher!", "Good morning, how did you sleep?", "Good morning, everyone!"] },
+                { word: "Good night", meaning: "晚安", emoji: "🌙", sentences: ["Good night, Mom!", "Good night, sweet dreams.", "Good night, see you tomorrow."] },
+                { word: "Please", meaning: "请", emoji: "🤲", sentences: ["Please help me.", "Please sit down.", "Can you please open the door?"] }
+            ]}
         ],
         sentences: [
             { en: "What's your name?", cn: "你叫什么名字？", answer: "My name is..." },

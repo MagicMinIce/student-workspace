@@ -283,13 +283,14 @@ const Parent = {
                                 <span style="font-size:20px;">${t.icon}</span>
                                 <div class="edit-task-info">
                                     <div class="edit-task-name">${t.name} ${isHidden ? '🚫' : ''}</div>
-                                    <div class="edit-task-meta">${t.time} · ${t.desc} · +${t.points}💎 ${isCustom ? '· ⭐自定义' : ''}</div>
+                                    <div class="edit-task-meta">${t.time} · ${t.desc} · +${Utils.getEffectivePoints('plan', t.name, t.points)}\u{1F48E} ${isCustom ? '· ⭐自定义' : (Utils.getEffectivePoints('plan', t.name, t.points) !== t.points ? '· 📝已调整' : '')}</div>
                                 </div>
                                 <div style="display:flex;gap:6px;">
                                     ${isCustom
                                         ? `<button class="edit-btn edit" onclick="Parent.showEditTaskForm('plan',${customIdx})">✏️ 编辑</button>
                                            <button class="edit-btn delete" onclick="Parent.deleteTask('plan', ${customIdx})">🗑 删除</button>`
-                                        : `<button class="edit-btn ${isHidden ? '' : 'edit'}" onclick="Parent.togglePresetTask('plan','${t.name.replace(/'/g,"\\'")}')">${isHidden ? '👁 显示' : '🚫 隐藏'}</button>`
+                                        : `<button class="edit-btn edit" onclick="Parent.showAdjustPointsForm('plan','${t.name.replace(/'/g,"\\'")}')">💎 积分</button>
+                                           <button class="edit-btn ${isHidden ? '' : 'edit'}" onclick="Parent.togglePresetTask('plan','${t.name.replace(/'/g,"\\'")}')">${isHidden ? '👁 显示' : '🚫 隐藏'}</button>`
                                     }
                                 </div>
                             </div>
@@ -312,13 +313,14 @@ const Parent = {
                                 <span style="font-size:20px;">${t.icon}</span>
                                 <div class="edit-task-info">
                                     <div class="edit-task-name">${t.name} ${isHidden ? '🚫' : ''}</div>
-                                    <div class="edit-task-meta">${t.desc} · ${t.frequency} · +${t.points}💎 ${isCustom ? '· ⭐自定义' : ''}</div>
+                                    <div class="edit-task-meta">${t.desc} · ${t.frequency} · +${Utils.getEffectivePoints('labor', t.name, t.points)}\u{1F48E} ${isCustom ? '· ⭐自定义' : (Utils.getEffectivePoints('labor', t.name, t.points) !== t.points ? '· 📝已调整' : '')}</div>
                                 </div>
                                 <div style="display:flex;gap:6px;">
                                     ${isCustom
                                         ? `<button class="edit-btn edit" onclick="Parent.showEditTaskForm('labor',${customIdx})">✏️ 编辑</button>
                                            <button class="edit-btn delete" onclick="Parent.deleteTask('labor', ${customIdx})">🗑 删除</button>`
-                                        : `<button class="edit-btn ${isHidden ? '' : 'edit'}" onclick="Parent.togglePresetTask('labor','${t.name.replace(/'/g,"\\'")}')">${isHidden ? '👁 显示' : '🚫 隐藏'}</button>`
+                                        : `<button class="edit-btn edit" onclick="Parent.showAdjustPointsForm('labor','${t.name.replace(/'/g,"\\'")}')">💎 积分</button>
+                                           <button class="edit-btn ${isHidden ? '' : 'edit'}" onclick="Parent.togglePresetTask('labor','${t.name.replace(/'/g,"\\'")}')">${isHidden ? '👁 显示' : '🚫 隐藏'}</button>`
                                     }
                                 </div>
                             </div>
@@ -341,13 +343,14 @@ const Parent = {
                                 <span style="font-size:20px;">${t.icon}</span>
                                 <div class="edit-task-info">
                                     <div class="edit-task-name">${t.name} ${isHidden ? '🚫' : ''}</div>
-                                    <div class="edit-task-meta">目标：${t.target}${t.unit} · +${t.points}💎 ${isCustom ? '· ⭐自定义' : ''}</div>
+                                    <div class="edit-task-meta">目标：${t.target}${t.unit} · +${Utils.getEffectivePoints('sports', t.name, t.points)}\u{1F48E} ${isCustom ? '· ⭐自定义' : (Utils.getEffectivePoints('sports', t.name, t.points) !== t.points ? '· 📝已调整' : '')}</div>
                                 </div>
                                 <div style="display:flex;gap:6px;">
                                     ${isCustom
                                         ? `<button class="edit-btn edit" onclick="Parent.showEditTaskForm('sports',${customIdx})">✏️ 编辑</button>
                                            <button class="edit-btn delete" onclick="Parent.deleteTask('sports', ${customIdx})">🗑 删除</button>`
-                                        : `<button class="edit-btn ${isHidden ? '' : 'edit'}" onclick="Parent.togglePresetTask('sports','${t.name.replace(/'/g,"\\'")}')">${isHidden ? '👁 显示' : '🚫 隐藏'}</button>`
+                                        : `<button class="edit-btn edit" onclick="Parent.showAdjustPointsForm('sports','${t.name.replace(/'/g,"\\'")}')">💎 积分</button>
+                                           <button class="edit-btn ${isHidden ? '' : 'edit'}" onclick="Parent.togglePresetTask('sports','${t.name.replace(/'/g,"\\'")}')">${isHidden ? '👁 显示' : '🚫 隐藏'}</button>`
                                     }
                                 </div>
                             </div>
@@ -777,6 +780,207 @@ const Parent = {
         }
         Store.save();
         App.render();
+    },
+
+    // ===== 调整预设任务积分 =====
+    showAdjustPointsForm(type, taskName) {
+        const overrides = Store.data.taskPointOverrides || {};
+        const key = type + '_' + taskName;
+        const currentOverride = overrides[key];
+        // 找原始积分
+        let defaultPoints = 5;
+        if (type === 'plan') {
+            const plan = Utils.isWeekend() ? PLAN_TEMPLATES.weekend : PLAN_TEMPLATES.weekday;
+            const t = plan.find(p => p.name === taskName);
+            if (t) defaultPoints = t.points;
+        } else if (type === 'labor') {
+            const t = COURSE_DATA.labor.tasks.find(t => t.name === taskName);
+            if (t) defaultPoints = t.points;
+        } else if (type === 'sports') {
+            const t = COURSE_DATA.sports.activities.find(t => t.name === taskName);
+            if (t) defaultPoints = t.points;
+        }
+        const displayPoints = currentOverride != null ? currentOverride : defaultPoints;
+
+        UI.modal('💎 调整积分 - ' + taskName, `
+            <div class="task-edit-form">
+                <div>
+                    <label>原始积分：${defaultPoints} 💎</label>
+                </div>
+                <div>
+                    <label>自定义积分（留空恢复默认）</label>
+                    <input type="number" id="adjustPoints" value="${displayPoints}" min="1" max="200" placeholder="${defaultPoints}">
+                </div>
+                <p style="font-size:13px;color:#888;">修改后，孩子完成该任务将获得新的积分数</p>
+            </div>
+        `, `<button class="lego-btn lego-btn-green" onclick="Parent.saveAdjustPoints('${type}','${taskName.replace(/'/g,"\\'")}',${defaultPoints})">✅ 保存</button>
+           <button class="lego-btn" onclick="UI.closeModal()">取消</button>`);
+    },
+
+    saveAdjustPoints(type, taskName, defaultPoints) {
+        const input = document.getElementById('adjustPoints');
+        if (!input) return;
+        const val = input.value.trim();
+        if (!Store.data.taskPointOverrides) Store.data.taskPointOverrides = {};
+        const key = type + '_' + taskName;
+        if (val === '' || parseInt(val) === defaultPoints) {
+            delete Store.data.taskPointOverrides[key];
+            UI.toast('已恢复默认积分', 'info');
+        } else {
+            Store.data.taskPointOverrides[key] = parseInt(val);
+            UI.toast('✅ 积分已调整为 ' + val + ' 💎', 'success');
+        }
+        Store.save();
+        UI.closeModal();
+        App.render();
+    },
+
+    // ===== 积分管理页面 =====
+    points() {
+        const history = Store.data.pointsHistory || [];
+        const today = Store.todayKey();
+
+        // 按日期分组
+        const byDate = {};
+        history.forEach((h, idx) => {
+            const dateKey = h.date.split('T')[0];
+            if (!byDate[dateKey]) byDate[dateKey] = [];
+            byDate[dateKey].push({ ...h, idx });
+        });
+        const dates = Object.keys(byDate).sort().reverse().slice(0, 14); // 最近14天
+
+        const dateLabels = {
+            [today]: '今天',
+            [new Date(Date.now() - 86400000).toISOString().split('T')[0]]: '昨天'
+        };
+
+        let historyHtml = dates.map(dateKey => {
+            const entries = byDate[dateKey];
+            const dayTotal = entries.reduce((s, e) => s + e.amount, 0);
+            const label = dateLabels[dateKey] || (dateKey.month ? dateKey : dateKey.substring(5).replace('-', '/'));
+            return `
+                <div class="lego-panel" style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #E0E0E0;">
+                        <span style="font-size:14px;font-weight:700;color:#2C2C2C;">📅 ${label}</span>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:13px;font-weight:700;color:${dayTotal >= 0 ? '#00852B' : '#CE1126'};">${dayTotal >= 0 ? '+' : ''}${dayTotal} 💎</span>
+                            <button class="edit-btn delete" style="font-size:11px;padding:3px 8px;" onclick="Parent.clearPointsByDay('${dateKey}')">🗑 清除当天</button>
+                        </div>
+                    </div>
+                    ${entries.map(e => `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F0F0F0;">
+                            <div style="flex:1;">
+                                <span style="font-size:13px;color:#555;">${e.reason}</span>
+                                <span style="font-size:11px;color:#AAA;margin-left:6px;">${e.date.split('T')[1].substring(0,5)}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span style="font-size:13px;font-weight:700;color:${e.amount > 0 ? '#00852B' : '#CE1126'};">${e.amount > 0 ? '+' : ''}${e.amount} 💎</span>
+                                <button class="edit-btn delete" style="font-size:10px;padding:2px 6px;" onclick="Parent.clearPointsEntry(${e.idx})">✕</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }).join('');
+
+        if (dates.length === 0) {
+            historyHtml = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">暂无积分记录</div></div>';
+        }
+
+        return `
+            <div class="fade-in">
+                <h1 class="page-title">💎 积分管理</h1>
+                <p class="page-subtitle">查看和调整孩子的积分记录</p>
+
+                <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+                    <div class="lego-panel stat-card" style="cursor:default;">
+                        <div class="stat-icon-lg bg-green">💎</div>
+                        <div class="stat-info"><h3>${Store.data.points}</h3><p>当前积分</p></div>
+                    </div>
+                    <div class="lego-panel stat-card" style="cursor:default;">
+                        <div class="stat-icon-lg bg-blue">📊</div>
+                        <div class="stat-info"><h3>${Store.data.totalPoints}</h3><p>累计积分</p></div>
+                    </div>
+                    <div class="lego-panel stat-card" style="cursor:default;">
+                        <div class="stat-icon-lg bg-orange">📝</div>
+                        <div class="stat-info"><h3>${history.length}</h3><p>记录数</p></div>
+                    </div>
+                </div>
+
+                <div class="lego-panel" style="margin-bottom:16px;">
+                    <h3 style="font-size:16px;font-weight:700;color:#2C2C2C;margin-bottom:10px;">⚡ 手动调整积分</h3>
+                    <div class="task-edit-row">
+                        <div>
+                            <label>说明</label>
+                            <input type="text" id="manualReason" placeholder="如：额外奖励/扣除" style="width:100%;">
+                        </div>
+                        <div>
+                            <label>积分数（负数=扣除）</label>
+                            <input type="number" id="manualAmount" value="5" style="width:100%;">
+                        </div>
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:8px;">
+                        <button class="lego-btn lego-btn-green" onclick="Parent.manualAdjustPoints(1)">➕ 增加积分</button>
+                        <button class="lego-btn lego-btn-red" onclick="Parent.manualAdjustPoints(-1)">➖ 扣除积分</button>
+                    </div>
+                </div>
+
+                <h3 style="font-size:16px;font-weight:700;color:#2C2C2C;margin-bottom:12px;">📜 积分记录（最近14天）</h3>
+                ${historyHtml}
+            </div>
+        `;
+    },
+
+    manualAdjustPoints(sign) {
+        const reason = document.getElementById('manualReason').value.trim() || '家长手动调整';
+        const amount = Math.abs(parseInt(document.getElementById('manualAmount').value) || 0) * sign;
+        if (amount === 0) { UI.toast('请输入积分数', 'warning'); return; }
+        if (amount < 0 && Store.data.points + amount < 0) {
+            UI.toast('积分不足，当前只有 ' + Store.data.points + ' 💎', 'warning');
+            return;
+        }
+        Store.addPoints(amount, reason);
+        UI.toast((amount > 0 ? '✅ 已增加 ' : '✅ 已扣除 ') + Math.abs(amount) + ' 💎', 'success');
+        App.render();
+    },
+
+    clearPointsEntry(idx) {
+        UI.confirm('确定要删除这条积分记录吗？积分将相应调整。', () => {
+            const history = Store.data.pointsHistory;
+            const entry = history[idx];
+            if (!entry) return;
+            // 反向调整积分
+            Store.data.points -= entry.amount;
+            if (entry.amount > 0) Store.data.totalPoints -= entry.amount;
+            history.splice(idx, 1);
+            Store.save();
+            UI.updateTopbar();
+            UI.toast('已删除该积分记录', 'info');
+            App.render();
+        });
+    },
+
+    clearPointsByDay(dateKey) {
+        UI.confirm('确定要清除 ' + dateKey + ' 的所有积分记录吗？当天获得的积分将被扣除。', () => {
+            const history = Store.data.pointsHistory;
+            const toRemove = [];
+            let totalToRemove = 0;
+            history.forEach((h, i) => {
+                if (h.date.split('T')[0] === dateKey) {
+                    toRemove.push(i);
+                    totalToRemove += h.amount;
+                }
+            });
+            // 从后往前删除
+            toRemove.reverse().forEach(i => history.splice(i, 1));
+            Store.data.points -= totalToRemove;
+            if (totalToRemove > 0) Store.data.totalPoints -= totalToRemove;
+            if (Store.data.points < 0) Store.data.points = 0;
+            Store.save();
+            UI.updateTopbar();
+            UI.toast('已清除当天 ' + toRemove.length + ' 条记录，扣除 ' + totalToRemove + ' 💎', 'info');
+            App.render();
+        });
     },
 
     showChangePin() {

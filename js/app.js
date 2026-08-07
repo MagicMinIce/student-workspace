@@ -40,7 +40,13 @@ const Store = {
         writingRecords: [],
         mistakeBook: [],
         reviewProgress: {},
-        punctuationProgress: {}
+        punctuationProgress: {},
+        // 数学每日进度
+        mathDayProgress: { currentDay: 0 },
+        // 英语每日进度
+        englishDayProgress: { currentDay: 0, quizPassed: {} },
+        // 家长积分覆盖
+        taskPointOverrides: {}
     },
 
     init() {
@@ -192,6 +198,14 @@ const Utils = {
 
     randInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+
+    // 获取有效积分（考虑家长覆盖）
+    getEffectivePoints(type, name, defaultPoints) {
+        const overrides = Store.data.taskPointOverrides || {};
+        const key = type + '_' + name;
+        if (overrides[key] != null) return overrides[key];
+        return defaultPoints;
     }
 };
 
@@ -493,7 +507,8 @@ const Modules = {
         }
 
         // Show photo checkin modal
-        this.showPhotoCheckin('plan', task.name, task.points, task.icon, { taskIndex: idx });
+        const effPoints = Utils.getEffectivePoints('plan', task.name, task.points);
+        this.showPhotoCheckin('plan', task.name, effPoints, task.icon, { taskIndex: idx });
     },
 
     resetPlan() {
@@ -504,7 +519,7 @@ const Modules = {
             const plan = [...basePlan, ...customPlan];
             const done = Store.data.planProgress[today] || [];
             done.forEach(i => {
-                if (plan[i]) Store.addPoints(-plan[i].points, '重置任务');
+                if (plan[i]) { const ep = Utils.getEffectivePoints('plan', plan[i].name, plan[i].points); Store.addPoints(-ep, '重置任务'); }
             });
             Store.data.planProgress[today] = [];
             // Remove pending plan reviews
@@ -1391,32 +1406,86 @@ const Modules = {
         let content = '';
 
         if (tab === 'lessons') {
-            content = data.units.map(unit => {
-                const lessons = unit.lessons.map(lesson => {
-                    const isDone = Store.data.lessonProgress[lesson.title] === 'done';
-                    return `
-                        <div class="lesson-card" onclick="Modules.openMathLesson('${lesson.title.replace(/'/g,"\\'")}')">
-                            <div class="lesson-header" style="background:${data.gradient};">
-                                <div class="lesson-status ${isDone?'done':''}">${isDone?'✓':'🔢'}</div>
-                                <div class="lesson-title">${lesson.title}</div>
-                                <div class="lesson-subtitle">${lesson.subtitle}</div>
-                            </div>
-                            <div class="lesson-body">
-                                <div class="lesson-content">${lesson.keyPoints}</div>
-                                <div class="lesson-tags">
-                                    <span class="lesson-tag">+${lesson.points} 💎</span>
-                                </div>
+            // 展平所有课时为有序列表
+            const allLessons = [];
+            data.units.forEach((unit, ui) => {
+                unit.lessons.forEach(lesson => {
+                    allLessons.push({ ...lesson, unitName: unit.name, unitIdx: ui });
+                });
+            });
+            const dayIdx = Store.data.mathDayProgress ? Store.data.mathDayProgress.currentDay || 0 : 0;
+            const currentIdx = Math.min(dayIdx, allLessons.length - 1);
+            const todayLesson = allLessons[currentIdx];
+            const isTodayDone = Store.data.lessonProgress[todayLesson.title] === 'done';
+            const doneCount = allLessons.filter(l => Store.data.lessonProgress[l.title] === 'done').length;
+            const totalLessons = allLessons.length;
+
+            // 今日课程大卡片
+            let lessonsHtml = `
+                <div class="lego-panel" style="margin-bottom:16px;border:3px solid #3182ce;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <h3 style="font-size:16px;font-weight:700;color:#3182ce;">📅 今日新课</h3>
+                        <span style="font-size:13px;color:#888;">第 ${currentIdx + 1} / ${totalLessons} 课</span>
+                    </div>
+                    <div class="progress-bar" style="margin-bottom:12px;"><div class="progress-fill blue" style="width:${doneCount / totalLessons * 100}%"></div></div>
+                    <div class="lesson-card" style="cursor:pointer;" onclick="Modules.openMathLesson('${todayLesson.title.replace(/'/g,"\\'")}')">
+                        <div class="lesson-header" style="background:${data.gradient};">
+                            <div class="lesson-status ${isTodayDone?'done':''}">${isTodayDone?'✓':'🔢'}</div>
+                            <div class="lesson-title">${todayLesson.title}</div>
+                            <div class="lesson-subtitle">${todayLesson.subtitle}</div>
+                        </div>
+                        <div class="lesson-body">
+                            <div class="lesson-content">${todayLesson.keyPoints}</div>
+                            <div class="lesson-tags">
+                                <span class="lesson-tag">+${todayLesson.points} 💎</span>
+                                <span style="font-size:12px;color:#888;">${todayLesson.unitName}</span>
                             </div>
                         </div>
-                    `;
-                }).join('');
-                return `
+                    </div>
+                    ${!isTodayDone ? '<p style="font-size:13px;color:#888;text-align:center;margin-top:8px;">完成今天的课程后，明天解锁下一课</p>' : (currentIdx < allLessons.length - 1 ? '<p style="font-size:13px;color:#00852B;text-align:center;margin-top:8px;">✅ 今日课程已完成！明天解锁下一课</p>' : '<p style="font-size:13px;color:#00852B;text-align:center;margin-top:8px;">🎉 全部课程已完成！</p>')}
+                </div>
+            `;
+
+            // 已学课程列表（可回看）
+            const completedLessons = allLessons.filter((l, i) => i < currentIdx || (i === currentIdx && isTodayDone));
+            if (completedLessons.length > 0) {
+                lessonsHtml += `
                     <div style="margin-bottom:20px;">
-                        <h3 style="font-size:16px;font-weight:bold;color:#FFF;margin-bottom:12px;">📦 ${unit.name}</h3>
-                        <div class="subject-grid">${lessons}</div>
+                        <h3 style="font-size:14px;font-weight:700;color:#666;margin-bottom:10px;">📚 已学课程（点击回看）</h3>
+                        <div class="subject-grid">
+                            ${completedLessons.map(l => `
+                                <div class="lesson-card" style="opacity:0.85;" onclick="Modules.openMathLesson('${l.title.replace(/'/g,"\\'")}')">
+                                    <div class="lesson-header" style="background:${data.gradient};">
+                                        <div class="lesson-status done">✓</div>
+                                        <div class="lesson-title" style="font-size:14px;">${l.title}</div>
+                                        <div class="lesson-subtitle" style="font-size:12px;">${l.subtitle}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
-            }).join('');
+            }
+
+            // 后续课程预览（锁定）
+            const futureLessons = allLessons.filter((l, i) => i > currentIdx);
+            if (futureLessons.length > 0) {
+                lessonsHtml += `
+                    <div style="margin-bottom:20px;">
+                        <h3 style="font-size:14px;font-weight:700;color:#999;margin-bottom:10px;">🔒 待解锁课程</h3>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                            ${futureLessons.map((l, i) => `
+                                <div style="background:#F5F5F5;border:2px dashed #DDD;border-radius:10px;padding:10px 14px;min-width:120px;opacity:0.6;">
+                                    <div style="font-size:12px;color:#999;">🔒 ${i + 2}天后</div>
+                                    <div style="font-size:13px;color:#666;font-weight:600;margin-top:4px;">${l.title}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            content = lessonsHtml;
         } else if (tab === 'practice') {
             const mp = Store.data.mathProgress;
             const accuracy = mp.total > 0 ? Math.round(mp.correct / mp.total * 100) : 0;
@@ -1526,6 +1595,13 @@ const Modules = {
         const lesson = COURSE_DATA.math.units.flatMap(u => u.lessons).find(l => l.title === title);
         Store.addPoints(lesson.points, '完成数学：' + title);
         Store.addPetExp(10);
+        // 推进每日进度
+        if (!Store.data.mathDayProgress) Store.data.mathDayProgress = { currentDay: 0 };
+        const allLessons = COURSE_DATA.math.units.flatMap(u => u.lessons);
+        const idx = allLessons.findIndex(l => l.title === title);
+        if (idx >= 0 && idx === Store.data.mathDayProgress.currentDay) {
+            Store.data.mathDayProgress.currentDay = idx + 1;
+        }
         Store.save();
         UI.closeModal();
         UI.toast('🎉 完成数学学习！+' + lesson.points + ' 💎', 'success');
@@ -1537,44 +1613,135 @@ const Modules = {
     english() {
         Store.markModuleUsed('english');
         const data = COURSE_DATA.english;
-        const tab = App.currentTab || 'words';
+        const tab = App.currentTab || 'daily';
+
+        const dayProgress = Store.data.englishDayProgress || { currentDay: 0, quizPassed: {} };
+        const dayIdx = dayProgress.currentDay || 0;
+        const allDays = data.dailyLessons;
+        const currentDay = allDays[Math.min(dayIdx, allDays.length - 1)];
+        const totalDays = allDays.length;
+        const doneDays = allDays.filter((d, i) => {
+            return d.words.every(w => Store.data.vocabProgress['en_' + w.word]);
+        }).length;
 
         let tabsHtml = `
             <div class="tabs">
-                <div class="tab ${tab==='words'?'active':''}" onclick="App.setTab('words')">📝 单词学习</div>
+                <div class="tab ${tab==='daily'?'active':''}" onclick="App.setTab('daily')">📝 每日学习</div>
                 <div class="tab ${tab==='sentences'?'active':''}" onclick="App.setTab('sentences')">💬 常用句型</div>
             </div>
         `;
 
         let content = '';
 
-        if (tab === 'words') {
-            content = data.categories.map(cat => {
-                const words = cat.words.map(w => {
-                    const isLearned = Store.data.vocabProgress['en_'+w.word];
-                    return `
-                        <div class="vocab-card" style="${isLearned?'border-color:#00852B #006B1F #006B1F #00852B;':''}">
-                            <div class="vocab-word" style="font-family:'Fredoka','Nunito',sans-serif;font-size:20px;color:#805ad5;">${w.word}</div>
-                            <div class="vocab-pinyin" style="font-size:16px;color:#3A3A3A;font-weight:bold;">${w.meaning}</div>
-                            <div class="vocab-example">${w.example}</div>
-                            <div style="margin-top:8px;">
-                                ${isLearned
-                                    ? '<span style="font-size:12px;color:#00852B;font-weight:bold;">✅ 已学习</span>'
-                                    : `<button class="lego-btn lego-btn-green" style="font-size:12px;padding:6px 14px;" onclick="Modules.learnEnglishWord('${w.word}')">标记已学 +3💎</button>`
-                                }
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                const learned = cat.words.filter(w => Store.data.vocabProgress['en_'+w.word]).length;
+        if (tab === 'daily') {
+            // 今日课程
+            const todayWords = currentDay.words;
+            const todayLearned = todayWords.filter(w => Store.data.vocabProgress['en_' + w.word]).length;
+            const allDone = todayLearned === todayWords.length;
+            const quizPassed = dayProgress.quizPassed && dayProgress.quizPassed[dayIdx];
+
+            let wordsHtml = todayWords.map((w, wi) => {
+                const isLearned = Store.data.vocabProgress['en_' + w.word];
                 return `
-                    <div style="margin-bottom:20px;">
-                        <h3 style="font-size:16px;font-weight:bold;color:#FFF;margin-bottom:4px;">${cat.icon} ${cat.name}</h3>
-                        <p style="font-size:12px;color:#FFF;margin-bottom:12px;opacity:0.8;">已学 ${learned} / ${cat.words.length}</p>
-                        <div class="grid grid-3">${words}</div>
+                    <div class="en-word-card" id="enword-${wi}" style="background:#FFF;border:3px solid ${isLearned?'#00852B':'#E0E0E0'};border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:14px;">
+                            <div style="font-size:48px;line-height:1;">${w.emoji}</div>
+                            <div style="flex:1;">
+                                <div style="font-family:'Fredoka','Nunito',sans-serif;font-size:24px;color:#805ad5;font-weight:700;">${w.word}</div>
+                                <div style="font-size:16px;color:#3A3A3A;font-weight:600;margin-top:2px;">${w.meaning}</div>
+                            </div>
+                            <div style="font-size:28px;">${isLearned?'✅':'📝'}</div>
+                        </div>
+                        <div style="margin-top:12px;padding:10px;background:#F3E8FF;border-radius:10px;">
+                            <div style="font-size:12px;color:#805ad5;font-weight:700;margin-bottom:6px;">💬 常用短句</div>
+                            ${w.sentences.map((s, si) => `
+                                <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+                                    <span style="font-family:'Fredoka','Nunito',sans-serif;font-size:14px;color:#555;flex:1;">${s}</span>
+                                    <button class="lego-btn" style="font-size:11px;padding:3px 8px;background:#805ad5;color:#FFF;border:none;border-radius:6px;cursor:pointer;" onclick="Modules.speakEnglish(${wi}, ${si})">🔊</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                            <button class="lego-btn lego-btn-blue" style="font-size:12px;padding:6px 14px;" onclick="Modules.speakWord('${w.word}', ${wi})">🔊 朗读</button>
+                            <button class="lego-btn lego-btn-yellow" style="font-size:12px;padding:6px 14px;" onclick="Modules.startRepeat(${wi}, '${w.word}')">🎤 跟读</button>
+                            <div id="repeat-result-${wi}" style="display:flex;align-items:center;font-size:13px;font-weight:700;"></div>
+                        </div>
+                        ${!isLearned ? `<div style="margin-top:8px;text-align:center;">
+                            <button class="lego-btn lego-btn-green" style="font-size:12px;padding:6px 16px;" onclick="Modules.learnEnglishWord('${w.word}')">标记已学 +3\u{1F48E}</button>
+                        </div>` : ''}
                     </div>
                 `;
             }).join('');
+
+            // 小测试区域
+            let quizHtml = '';
+            if (allDone && !quizPassed) {
+                quizHtml = `
+                    <div class="lego-panel" style="margin-top:16px;border:3px solid #FCD116;">
+                        <h3 style="font-size:16px;font-weight:700;color:#FCD116;margin-bottom:8px;">🧪 小测试</h3>
+                        <p style="font-size:13px;color:#666;margin-bottom:12px;">选出正确的中文意思，通过测试可获得额外奖励！</p>
+                        <div id="en-quiz-area"></div>
+                        <div style="margin-top:12px;text-align:center;">
+                            <button class="lego-btn lego-btn-diamond" onclick="Modules.startEnglishQuiz(${dayIdx})">📝 开始测试</button>
+                        </div>
+                    </div>
+                `;
+            } else if (quizPassed) {
+                quizHtml = `
+                    <div class="lego-panel" style="margin-top:16px;border:3px solid #00852B;text-align:center;">
+                        <div style="font-size:32px;">🏆</div>
+                        <p style="font-size:14px;color:#00852B;font-weight:700;margin-top:4px;">测试已通过！明天解锁新课</p>
+                    </div>
+                `;
+            }
+
+            content = `
+                <div class="lego-panel" style="margin-bottom:16px;border:3px solid #805ad5;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <h3 style="font-size:16px;font-weight:700;color:#805ad5;">${currentDay.icon} ${currentDay.title}</h3>
+                        <span style="font-size:13px;color:#888;">第 ${dayIdx + 1} / ${totalDays} 天</span>
+                    </div>
+                    <div class="progress-bar" style="margin-bottom:8px;"><div class="progress-fill" style="width:${doneDays / totalDays * 100}%;background:#805ad5;"></div></div>
+                    <p style="font-size:12px;color:#888;">今日单词 ${todayLearned} / ${todayWords.length} 已学</p>
+                </div>
+                ${wordsHtml}
+                ${quizHtml}
+                ${allDone && quizPassed && dayIdx < totalDays - 1 ? `
+                    <div style="text-align:center;margin-top:16px;">
+                        <button class="lego-btn lego-btn-green" onclick="Modules.advanceEnglishDay()">➡️ 解锁明天课程</button>
+                    </div>
+                ` : ''}
+                ${!allDone ? `<p style="font-size:13px;color:#888;text-align:center;margin-top:12px;">学完所有单词后解锁小测试</p>` : ''}
+            `;
+
+            // 已学课程预览
+            if (dayIdx > 0) {
+                content += `
+                    <div style="margin-top:20px;">
+                        <h3 style="font-size:14px;font-weight:700;color:#666;margin-bottom:10px;">📚 已学课程</h3>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                            ${allDays.slice(0, dayIdx).map((d, i) => `
+                                <span style="background:#E9D5FF;color:#805ad5;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;">✅ ${d.icon} ${d.title}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 待解锁预览
+            if (dayIdx < totalDays - 1) {
+                content += `
+                    <div style="margin-top:14px;">
+                        <h3 style="font-size:14px;font-weight:700;color:#999;margin-bottom:10px;">🔒 待解锁</h3>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                            ${allDays.slice(dayIdx + 1).map((d, i) => `
+                                <span style="background:#F5F5F5;color:#999;padding:6px 12px;border-radius:20px;font-size:12px;">🔒 ${d.icon} ${d.title}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
         } else if (tab === 'sentences') {
             content = `
                 <div class="grid grid-2">
@@ -1583,7 +1750,7 @@ const Modules = {
                             <div style="font-family:'Fredoka','Nunito',sans-serif;font-size:14px;color:#805ad5;margin-bottom:8px;line-height:1.6;">${s.en}</div>
                             <div style="font-size:15px;color:#3A3A3A;font-weight:bold;margin-bottom:6px;">${s.cn}</div>
                             <div style="font-size:13px;color:#666;padding:8px;background:#0057B8;color:#FFF;border:2px solid #E0E0E0;">
-                                💡 回答：${s.answer}
+                                \u{1F4A1} 回答：${s.answer}
                             </div>
                         </div>
                     `).join('')}
@@ -1604,13 +1771,221 @@ const Modules = {
         `;
     },
 
-    learnEnglishWord(word) {
+    // 英语朗读 (Web Speech API)
+    speakWord(word, cardIdx) {
+        if (!('speechSynthesis' in window)) {
+            UI.toast('浏览器不支持语音功能', 'error');
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(word);
+        utter.lang = 'en-US';
+        utter.rate = 0.8;
+        utter.pitch = 1.1;
+        window.speechSynthesis.speak(utter);
+        // 高亮卡片
+        const card = document.getElementById('enword-' + cardIdx);
+        if (card) {
+            card.style.borderColor = '#805ad5';
+            card.style.boxShadow = '0 0 12px rgba(128,90,213,0.4)';
+            setTimeout(() => { card.style.boxShadow = ''; }, 1500);
+        }
+    },
+
+    // 英语句子朗读
+    speakEnglish(cardIdx, sentIdx) {
+        const dayProgress = Store.data.englishDayProgress || { currentDay: 0 };
+        const day = COURSE_DATA.english.dailyLessons[dayProgress.currentDay || 0];
+        if (!day || !day.words[cardIdx] || !day.words[cardIdx].sentences[sentIdx]) return;
+        const text = day.words[cardIdx].sentences[sentIdx];
+        if (!('speechSynthesis' in window)) {
+            UI.toast('浏览器不支持语音功能', 'error');
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-US';
+        utter.rate = 0.75;
+        window.speechSynthesis.speak(utter);
+    },
+
+    // 英语跟读 (SpeechRecognition)
+    _recognition: null,
+    startRepeat(cardIdx, word) {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            // 不支持语音识别，用简单模拟
+            UI.toast('浏览器不支持跟读，请用朗读功能', 'warning');
+            return;
+        }
+        if (Modules._recognition) {
+            Modules._recognition.stop();
+            Modules._recognition = null;
+        }
+        const recog = new SR();
+        recog.lang = 'en-US';
+        recog.continuous = false;
+        recog.interimResults = false;
+        recog.maxAlternatives = 3;
+
+        const resultEl = document.getElementById('repeat-result-' + cardIdx);
+        if (resultEl) {
+            resultEl.innerHTML = '<span style="color:#FCD116;">🎤 朗读中...</span>';
+        }
+
+        recog.onstart = function() {};
+        recog.onerror = function(e) {
+            if (resultEl) resultEl.innerHTML = '<span style="color:#CE1126;">未听清，再试一次</span>';
+        };
+        recog.onresult = function(e) {
+            const heard = e.results[0][0].transcript.trim().toLowerCase();
+            const target = word.toLowerCase();
+            // 简单匹配：包含目标词或相似
+            const isMatch = heard === target || heard.includes(target) || target.includes(heard);
+            if (isMatch) {
+                if (resultEl) resultEl.innerHTML = '<span style="color:#00852B;">✅ 读音正确！</span>';
+                UI.fireworks();
+                Modules._playSuccessSound();
+                UI.toast('🎉 读得真好！', 'success');
+                // 自动标记已学
+                if (!Store.data.vocabProgress['en_' + word]) {
+                    Modules.learnEnglishWord(word, true);
+                }
+            } else {
+                if (resultEl) resultEl.innerHTML = '<span style="color:#CE1126;">听到：' + heard + '，再试一次</span>';
+            }
+        };
+        recog.onend = function() {
+            Modules._recognition = null;
+        };
+
+        Modules._recognition = recog;
+        recog.start();
+    },
+
+    // 成功音效 (Web Audio API)
+    _audioCtx: null,
+    _playSuccessSound() {
+        try {
+            if (!Modules._audioCtx) {
+                Modules._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const ctx = Modules._audioCtx;
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                const t = ctx.currentTime + i * 0.12;
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.15, t + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+                osc.start(t);
+                osc.stop(t + 0.3);
+            });
+        } catch(e) {}
+    },
+
+    // 英语小测试
+    startEnglishQuiz(dayIdx) {
+        const day = COURSE_DATA.english.dailyLessons[dayIdx];
+        if (!day) return;
+        const words = day.words;
+        // 生成选择题：给英文选中文
+        const questions = words.map(w => {
+            // 随机选3个干扰项
+            const allMeanings = COURSE_DATA.english.dailyLessons.flatMap(d => d.words).map(ww => ww.meaning);
+            const wrongs = Utils.shuffle(allMeanings.filter(m => m !== w.meaning)).slice(0, 3);
+            const options = Utils.shuffle([w.meaning, ...wrongs]);
+            return { word: w.word, emoji: w.emoji, correct: w.meaning, options };
+        });
+
+        Modules._quizState = { questions, index: 0, correct: 0, dayIdx };
+        Modules.renderEnglishQuiz();
+    },
+
+    renderEnglishQuiz() {
+        const s = Modules._quizState;
+        if (!s) return;
+        if (s.index >= s.questions.length) {
+            // 测试结束
+            const passed = s.correct >= Math.ceil(s.questions.length * 0.7);
+            if (passed) {
+                if (!Store.data.englishDayProgress) Store.data.englishDayProgress = { currentDay: 0, quizPassed: {} };
+                if (!Store.data.englishDayProgress.quizPassed) Store.data.englishDayProgress.quizPassed = {};
+                Store.data.englishDayProgress.quizPassed[s.dayIdx] = true;
+                Store.addPoints(5, '英语小测试通过');
+                Store.addPetExp(5);
+                Store.save();
+                UI.fireworks();
+                Modules._playSuccessSound();
+                UI.toast('🎉 测试通过！+5 💎', 'success');
+            } else {
+                UI.toast('还需努力，再试一次吧！', 'info');
+            }
+            Modules._quizState = null;
+            App.render();
+            return;
+        }
+
+        const q = s.questions[s.index];
+        const area = document.getElementById('en-quiz-area');
+        if (!area) return;
+        area.innerHTML = `
+            <div style="text-align:center;margin-bottom:12px;">
+                <span style="font-size:13px;color:#888;">第 ${s.index + 1} / ${s.questions.length} 题 · 答对 ${s.correct} 题</span>
+            </div>
+            <div style="text-align:center;padding:20px;background:#F3E8FF;border-radius:12px;margin-bottom:12px;">
+                <div style="font-size:48px;">${q.emoji}</div>
+                <div style="font-family:'Fredoka','Nunito',sans-serif;font-size:28px;color:#805ad5;font-weight:700;margin-top:8px;">${q.word}</div>
+                <button class="lego-btn" style="font-size:12px;padding:4px 10px;margin-top:6px;background:#805ad5;color:#FFF;border:none;border-radius:6px;cursor:pointer;" onclick="Modules.speakWord('${q.word}', -1)">🔊 听一听</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                ${q.options.map((opt, oi) => `
+                    <button class="lego-btn" style="font-size:14px;padding:12px;border:2px solid #E0E0E0;border-radius:10px;cursor:pointer;background:#FFF;color:#333;" onclick="Modules.answerEnglishQuiz(${oi}, '${opt.replace(/'/g, "\\'")}', '${q.correct.replace(/'/g, "\\'")}')">${opt}</button>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    answerEnglishQuiz(optIdx, selected, correct) {
+        const s = Modules._quizState;
+        if (!s) return;
+        const q = s.questions[s.index];
+        const buttons = document.querySelectorAll('#en-quiz-area button.lego-btn');
+        if (selected === correct) {
+            s.correct++;
+            if (buttons[optIdx]) buttons[optIdx].style.background = '#C8E6C9';
+            setTimeout(() => { s.index++; Modules.renderEnglishQuiz(); }, 600);
+        } else {
+            if (buttons[optIdx]) buttons[optIdx].style.background = '#FFCDD2';
+            // 显示正确答案
+            const correctIdx = q.options.indexOf(correct);
+            if (buttons[correctIdx]) buttons[correctIdx].style.background = '#C8E6C9';
+            setTimeout(() => { s.index++; Modules.renderEnglishQuiz(); }, 1200);
+        }
+    },
+
+    advanceEnglishDay() {
+        if (!Store.data.englishDayProgress) Store.data.englishDayProgress = { currentDay: 0, quizPassed: {} };
+        Store.data.englishDayProgress.currentDay = (Store.data.englishDayProgress.currentDay || 0) + 1;
+        Store.save();
+        UI.toast('🔓 新课程已解锁！', 'success');
+        App.render();
+    },
+
+    learnEnglishWord(word, silent) {
         Store.data.vocabProgress['en_'+word] = true;
         Store.addPoints(3, '学习英语单词：' + word);
         Store.addPetExp(3);
         Store.save();
-        UI.toast('✅ 学会了 "' + word + '" +3 💎', 'success');
-        App.render();
+        if (!silent) {
+            UI.toast('✅ 学会了 "' + word + '" +3 💎', 'success');
+            App.render();
+        }
     },
 
     // ===== 劳动 =====
@@ -1628,6 +2003,7 @@ const Modules = {
         const tasksHtml = allTasks.map(task => {
             const doneToday = todayRecords.find(r => r.taskName === task.name);
             const pending = reviews.find(r => r.taskType === 'labor' && r.taskName === task.name && r.status === 'pending');
+            const effPoints = Utils.getEffectivePoints('labor', task.name, task.points);
 
             let actionHtml = '';
             if (doneToday) {
@@ -1635,7 +2011,7 @@ const Modules = {
             } else if (pending) {
                 actionHtml = '<span class="task-status-tag pending">⏳ 待审核</span>';
             } else {
-                actionHtml = `<button class="lego-btn lego-btn-green" style="font-size:13px;padding:8px 16px;" onclick="Modules.doLabor('${task.name.replace(/'/g,"\\'")}',${task.points},'${task.icon}')">拍照打卡 +${task.points}💎</button>`;
+                actionHtml = `<button class="lego-btn lego-btn-green" style="font-size:13px;padding:8px 16px;" onclick="Modules.doLabor('${task.name.replace(/'/g,"\\'")}',${effPoints},'${task.icon}')">拍照打卡 +${effPoints}\u{1F48E}</button>`;
             }
 
             return `
@@ -1643,7 +2019,7 @@ const Modules = {
                     <div class="activity-icon bg-dirt">${task.icon}</div>
                     <div class="activity-info">
                         <div class="activity-name">${task.name}</div>
-                        <div class="activity-desc">${task.desc} · ${task.frequency} · +${task.points}💎</div>
+                        <div class="activity-desc">${task.desc} · ${task.frequency} · +${effPoints}\u{1F48E}</div>
                     </div>
                     <div class="activity-action">${actionHtml}</div>
                 </div>
@@ -1708,6 +2084,7 @@ const Modules = {
         const activitiesHtml = allActivities.map(act => {
             const doneToday = todayRecords.find(r => r.activity === act.name);
             const pending = reviews.find(r => r.taskType === 'sports' && r.taskName === act.name && r.status === 'pending');
+            const effPoints = Utils.getEffectivePoints('sports', act.name, act.points);
 
             let actionHtml = '';
             if (doneToday) {
@@ -1715,7 +2092,7 @@ const Modules = {
             } else if (pending) {
                 actionHtml = '<span class="task-status-tag pending">⏳ 待审核</span>';
             } else {
-                actionHtml = `<button class="lego-btn lego-btn-green" style="font-size:13px;padding:8px 16px;" onclick="Modules.doSport('${act.name.replace(/'/g,"\\'")}',${act.points},'${act.icon}',${act.target})">拍照打卡 +${act.points}💎</button>`;
+                actionHtml = `<button class="lego-btn lego-btn-green" style="font-size:13px;padding:8px 16px;" onclick="Modules.doSport('${act.name.replace(/'/g,"\\'")}',${effPoints},'${act.icon}',${act.target})">拍照打卡 +${effPoints}\u{1F48E}</button>`;
             }
 
             return `
@@ -1723,7 +2100,7 @@ const Modules = {
                     <div class="activity-icon bg-grass">${act.icon}</div>
                     <div class="activity-info">
                         <div class="activity-name">${act.name}</div>
-                        <div class="activity-desc">目标：${act.target}${act.unit} · +${act.points}💎</div>
+                        <div class="activity-desc">目标：${act.target}${act.unit} · +${effPoints}\u{1F48E}</div>
                     </div>
                     <div class="activity-action">${actionHtml}</div>
                 </div>
@@ -2634,8 +3011,8 @@ const Games = {
     // 单词消消乐
     startWordMatch() {
         const allWords = [];
-        COURSE_DATA.english.categories.forEach(cat => {
-            cat.words.forEach(w => allWords.push(w));
+        COURSE_DATA.english.dailyLessons.forEach(day => {
+            day.words.forEach(w => allWords.push({ word: w.word, meaning: w.meaning }));
         });
         const selected = Utils.shuffle(allWords).slice(0, 6);
         this.wordState = { words: selected, matched: [], selected: null, score: 0, attempts: 0 };
@@ -3060,6 +3437,7 @@ const App = {
             games: () => Modules.games(),
             'parent-review': () => Parent.review(),
             'parent-tasks': () => Parent.tasks(),
+            'parent-points': () => Parent.points(),
             'parent-stats': () => Parent.stats(),
             'parent-rewards': () => Parent.rewards()
         };
