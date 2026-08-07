@@ -698,35 +698,37 @@ const Modules = {
 
         const charsHtml = charDetails.map(c => {
             const isLearned = Store.data.vocabProgress[c.char];
-            const strokeOrder = (typeof STROKE_ORDER !== 'undefined' ? STROKE_ORDER[c.char] : '') || '';
-            const strokesList = strokeOrder ? strokeOrder.split('\u3001') : [];
+            const strokeCount = c.strokes || 0;
+            const hwId = 'hw-' + c.char + '-' + Math.random().toString(36).slice(2, 8);
             return `
                 <div class="char-card">
                     <div class="char-card-header">
                         <div class="tianzi-grid"><div class="tianzi-char">${c.char}</div></div>
                         <div class="char-card-info">
                             <div class="char-card-pinyin">${c.pinyin || ''}</div>
-                            <div class="char-card-meta">${c.strokes ? c.strokes + '画' : ''} ${c.radical ? '· ' + c.radical + '部' : ''}</div>
+                            <div class="char-card-meta">${strokeCount ? strokeCount + '画' : ''} ${c.radical ? '\u00B7 ' + c.radical + '部' : ''}</div>
                             <div style="margin-top:6px;">
                                 ${isLearned
-                                    ? '<span style="font-size:12px;color:#00852B;font-weight:700;">✅ 已学会</span>'
-                                    : `<button class="lego-btn lego-btn-green" style="font-size:11px;padding:4px 12px;" onclick="Modules.learnChar('${c.char}')">标记已学 +2💎</button>`
+                                    ? '<span style="font-size:12px;color:#00852B;font-weight:700;">\u2705 已学会</span>'
+                                    : `<button class="lego-btn lego-btn-green" style="font-size:11px;padding:4px 12px;" onclick="Modules.learnChar('${c.char}')">标记已学 +2\u{1F48E}</button>`
                                 }
                             </div>
                         </div>
                     </div>
                     ${c.groups && c.groups.length > 0 ? `<div class="char-card-groups">${c.groups.map(g => `<span class="char-group-tag">${g}</span>`).join('')}</div>` : ''}
-                    ${strokesList.length > 0 ? `
-                        <div class="stroke-order-section" onclick="this.classList.toggle('expanded')">
-                            <div class="stroke-order-header">
-                                <span style="font-size:13px;font-weight:700;color:#0057B8;">✍ 笔顺（点击展开）</span>
-                                <span style="font-size:12px;color:#888;">${strokesList.length}笔</span>
-                            </div>
-                            <div class="stroke-order-list">
-                                ${strokesList.map((s, si) => { const sym = (typeof STROKE_SYMBOLS !== 'undefined' ? STROKE_SYMBOLS[s] : '') || ''; return `<span class="stroke-item"><span class="stroke-num">${si+1}</span>${sym ? `<span class="stroke-symbol">${sym}</span>` : ''}<span class="stroke-name">${s}</span></span>`; }).join('')}
+                    <div class="stroke-order-section">
+                        <div class="stroke-order-header" onclick="Modules.toggleStrokeOrder(this, '${c.char}', '${hwId}')">
+                            <span style="font-size:13px;font-weight:700;color:#0057B8;">\u270D 笔顺动画（点击展开）</span>
+                            <span style="font-size:12px;color:#888;">${strokeCount ? strokeCount + '笔' : ''}</span>
+                        </div>
+                        <div class="stroke-order-body" style="display:none;">
+                            <div id="${hwId}" class="hanzi-writer-target"></div>
+                            <div class="stroke-order-controls">
+                                <button class="lego-btn lego-btn-blue" style="font-size:12px;padding:4px 14px;" onclick="Modules.playStrokeAnim('${hwId}','${c.char}',event)">\u25B6 播放笔顺</button>
+                                <button class="lego-btn lego-btn-yellow" style="font-size:12px;padding:4px 14px;" onclick="Modules.quizStroke('${hwId}','${c.char}',event)">\u270F 练习书写</button>
                             </div>
                         </div>
-                    ` : ''}
+                    </div>
                 </div>
             `;
         }).join('');
@@ -1114,6 +1116,71 @@ const Modules = {
         Store.save();
         UI.toast('✅ 学会了 "' + char + '" +2 💎', 'success');
         App.render();
+    },
+
+    // HanziWriter 笔顺动画
+    _hwWriters: {},
+
+    toggleStrokeOrder(headerEl, char, hwId) {
+        const body = headerEl.nextElementSibling;
+        const expanded = body.style.display === 'none';
+        body.style.display = expanded ? 'block' : 'none';
+        if (expanded && !Modules._hwWriters[hwId]) {
+            Modules._createHanziWriter(hwId, char);
+        }
+    },
+
+    _createHanziWriter(hwId, char) {
+        if (typeof HanziWriter === 'undefined') {
+            document.getElementById(hwId).innerHTML = '<p style="font-size:13px;color:#999;text-align:center;padding:20px;">笔顺库加载失败，请检查网络</p>';
+            return null;
+        }
+        var writer = HanziWriter.create(hwId, char, {
+            width: 120,
+            height: 120,
+            padding: 5,
+            showOutline: true,
+            strokeColor: '#333',
+            radicalColor: '#168F16',
+            outlineColor: '#DDD',
+            strokeAnimationSpeed: 1,
+            delayBetweenStrokes: 300,
+            showCharacter: false
+        });
+        Modules._hwWriters[hwId] = writer;
+        return writer;
+    },
+
+    playStrokeAnim(hwId, char, ev) {
+        if (ev) ev.stopPropagation();
+        var writer = Modules._hwWriters[hwId];
+        if (!writer) {
+            writer = Modules._createHanziWriter(hwId, char);
+            if (!writer) return;
+        }
+        writer.hideCharacter();
+        writer.hideOutline();
+        setTimeout(function() {
+            writer.showOutline();
+            writer.animateCharacter();
+        }, 100);
+    },
+
+    quizStroke(hwId, char, ev) {
+        if (ev) ev.stopPropagation();
+        var writer = Modules._hwWriters[hwId];
+        if (!writer) {
+            writer = Modules._createHanziWriter(hwId, char);
+            if (!writer) return;
+        }
+        writer.hideCharacter();
+        writer.showOutline();
+        writer.quiz({
+            onMistake: function() {},
+            onComplete: function() {
+                UI.toast('🎉 太棒了！"' + char + '"写对了！', 'success');
+            }
+        });
     },
 
     recitePoem(title) {
