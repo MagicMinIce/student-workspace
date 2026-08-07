@@ -146,13 +146,20 @@ const CloudSync = {
             throw new Error(this.lastError || 'Supabase 初始化失败');
         }
 
+        console.log('[CloudSync] joining room:', code);
+
         const { data, error } = await this.client
             .from('workspaces')
             .select('*')
             .eq('id', code)
             .single();
 
-        if (error || !data) throw new Error('同步码无效或数据不存在');
+        if (error || !data) {
+            console.error('[CloudSync] join error:', error);
+            throw new Error('同步码无效或数据不存在');
+        }
+
+        console.log('[CloudSync] cloud data received, keys:', Object.keys(data.data || {}));
 
         // 合并云端数据到本地
         this.isPulling = true;
@@ -163,6 +170,8 @@ const CloudSync = {
         Store.save();
         this.lastCloudTimestamp = data.timestamp || 0;
         this.isPulling = false;
+
+        console.log('[CloudSync] data merged, pendingReviews:', Store.data.pendingReviews?.length || 0);
 
         UI.updateTopbar();
         App.render();
@@ -213,6 +222,42 @@ const CloudSync = {
         this.isPushing = false;
     },
 
+    // ===== 手动从云端拉取最新数据 =====
+    async pull() {
+        if (!this.enabled || !this.roomId || this.isPulling || !this.client) return;
+
+        try {
+            const { data, error } = await this.client
+                .from('workspaces')
+                .select('*')
+                .eq('id', this.roomId)
+                .single();
+
+            if (error) throw error;
+            if (!data) return;
+
+            const cloudTime = data.timestamp || 0;
+            if (cloudTime > this.lastCloudTimestamp) {
+                console.log('[CloudSync] pull found newer data, cloud:', cloudTime, 'local:', this.lastCloudTimestamp);
+                this.isPulling = true;
+                Store.data = Object.assign(
+                    JSON.parse(JSON.stringify(Store.defaultData)),
+                    data.data
+                );
+                Store.save();
+                this.lastCloudTimestamp = cloudTime;
+                this.hasUnsyncedChanges = false;
+                this.saveSettings();
+                UI.updateTopbar();
+                App.render();
+                this.isPulling = false;
+                console.log('[CloudSync] pull completed, pendingReviews:', Store.data.pendingReviews?.length || 0);
+            }
+        } catch (e) {
+            console.error('[CloudSync] pull error:', e);
+        }
+    },
+
     // ===== 实时监听云端数据变化 =====
     startListening() {
         if (this.listeningChannel && this.client) {
@@ -223,17 +268,19 @@ const CloudSync = {
             .channel('workspace-' + this.roomId)
             .on('postgres_changes',
                 {
-                    event: 'UPDATE',
+                    event: '*',
                     schema: 'public',
                     table: 'workspaces',
                     filter: 'id=eq.' + this.roomId
                 },
                 (payload) => {
+                    console.log('[CloudSync] realtime event:', payload.eventType);
                     if (this.isPushing) return;
 
                     const newData = payload.new;
                     if (newData && newData.data) {
                         const cloudTime = newData.timestamp || 0;
+                        console.log('[CloudSync] cloud timestamp:', cloudTime, 'local last:', this.lastCloudTimestamp);
                         if (cloudTime > this.lastCloudTimestamp) {
                             // 云端数据更新，更新本地
                             this.isPulling = true;
@@ -250,13 +297,17 @@ const CloudSync = {
                             this.updateStatus('synced');
                             this.lastError = null;
                             this.isPulling = false;
+                            console.log('[CloudSync] data pulled from cloud successfully');
                         }
                     }
                 }
             )
             .subscribe((status) => {
+                console.log('[CloudSync] subscription status:', status);
                 if (status === 'SUBSCRIBED') {
                     this.updateStatus('synced');
+                    // 连接建立后主动拉取一次最新数据
+                    this.pull();
                 } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                     this.lastError = '实时连接异常';
                     this.updateStatus('error');
