@@ -579,33 +579,47 @@ const Modules = {
         `;
 
         const lessonKey = currentLesson.title;
-        const steps = Store.data.lessonProgress[lessonKey + '_steps'] || [];
         const studySteps = [
             { title: '预习读课文', desc: '朗读课文2-3遍，了解大意', icon: '📖' },
             { title: '圈出生字', desc: '在课文中圈出本课生字，尝试认读', icon: '✏️' },
             { title: '朗读背诵', desc: '流利朗读课文，尝试背诵精彩段落', icon: '🗣️' },
             { title: '完成课后习题', desc: '完成课后练习题，巩固所学', icon: '📝' }
         ];
+        const stepPoints = 5;
         const stepsHtml = studySteps.map((s, i) => {
-            const done = steps[i];
+            const stepId = lessonKey + '_step_' + i;
+            const approved = Modules.hasApprovedReview('chinese_step', stepId);
+            const pending = Modules.hasPendingReview('chinese_step', stepId);
+            let statusHtml = '';
+            let stepClass = '';
+            if (approved) {
+                stepClass = 'done';
+                statusHtml = '<span style="font-size:12px;color:#00852B;font-weight:700;">✅ 已通过</span>';
+            } else if (pending) {
+                stepClass = 'pending';
+                statusHtml = '<span style="font-size:12px;color:#FF9800;font-weight:700;">⏳ 待审核</span>';
+            } else {
+                statusHtml = `<button class="lego-btn lego-btn-blue" style="font-size:11px;padding:4px 12px;" onclick="Modules.showPhotoCheckin('chinese_step','${stepId.replace(/'/g,"\\'")}',${stepPoints},'${s.icon}',{stepIndex:${i},lessonTitle:'${lessonKey.replace(/'/g,"\\'")}'})">📸 打卡</button>`;
+            }
             return `
-                <div class="study-step ${done?'done':''}" onclick="Modules.toggleStudyStep('${lessonKey.replace(/'/g,"\\'")}', ${i})">
-                    <div class="step-number">${done?'✓':i+1}</div>
+                <div class="study-step ${stepClass}">
+                    <div class="step-number">${approved?'✓':i+1}</div>
                     <div class="step-content">
                         <div class="step-title">${s.icon} ${s.title}</div>
                         <div class="step-desc">${s.desc}</div>
                     </div>
-                    <span style="font-size:12px;color:${done?'#00852B':'#888'};font-weight:700;">${done?'已完成':'点击完成'}</span>
+                    ${statusHtml}
                 </div>
             `;
         }).join('');
 
-        const allDone = steps.length === 4 && steps.every(s => s);
+        const approvedSteps = studySteps.filter((_, i) => Modules.hasApprovedReview('chinese_step', lessonKey + '_step_' + i)).length;
+        const allDone = approvedSteps === 4;
         const completeBtn = allDone && Store.data.lessonProgress[lessonKey] !== 'done'
             ? `<button class="lego-btn lego-btn-green" style="width:100%;margin-top:12px;" onclick="Modules.completeLesson('${lessonKey.replace(/'/g,"\\'")}')">🎉 全部步骤完成！领取奖励 +${currentLesson.points}💎</button>`
             : (Store.data.lessonProgress[lessonKey] === 'done'
                 ? '<div style="text-align:center;padding:12px;background:#E8F5E9;border-radius:12px;color:#00852B;font-weight:700;">✅ 本课已完成</div>'
-                : '');
+                : `<div style="text-align:center;padding:8px;background:#FFF3E0;border-radius:8px;color:#E65100;font-size:13px;font-weight:600;">已完成 ${approvedSteps}/4 步骤，需全部通过家长审核</div>`);
 
         const unitsHtml = data.units.map(unit => {
             const lessons = unit.lessons.map(lesson => {
@@ -663,10 +677,20 @@ const Modules = {
             }).join('');
         }
 
+        // 课文原文
+        const lessonText = (typeof LESSON_TEXTS !== 'undefined' ? LESSON_TEXTS[currentLesson.title] : '') || '';
+        const textHtml = lessonText ? `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📖 课文原文</h3>
+                <div class="lesson-text-content">${lessonText.replace(/\n/g, '<br><br>')}</div>
+            </div>
+        ` : '';
+
         return `
             ${banner}
+            ${textHtml}
             <div class="lego-panel" style="margin-bottom:16px;">
-                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📋 今日学习步骤</h3>
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📋 今日学习步骤（拍照打卡→家长审核→获得积分）</h3>
                 ${stepsHtml}
                 ${completeBtn}
             </div>
@@ -684,6 +708,8 @@ const Modules = {
 
         const charsHtml = charDetails.map(c => {
             const isLearned = Store.data.vocabProgress[c.char];
+            const strokeOrder = (typeof STROKE_ORDER !== 'undefined' ? STROKE_ORDER[c.char] : '') || '';
+            const strokesList = strokeOrder ? strokeOrder.split('\u3001') : [];
             return `
                 <div class="char-card">
                     <div class="char-card-header">
@@ -700,6 +726,17 @@ const Modules = {
                         </div>
                     </div>
                     ${c.groups && c.groups.length > 0 ? `<div class="char-card-groups">${c.groups.map(g => `<span class="char-group-tag">${g}</span>`).join('')}</div>` : ''}
+                    ${strokesList.length > 0 ? `
+                        <div class="stroke-order-section" onclick="this.classList.toggle('expanded')">
+                            <div class="stroke-order-header">
+                                <span style="font-size:13px;font-weight:700;color:#0057B8;">✍ 笔顺（点击展开）</span>
+                                <span style="font-size:12px;color:#888;">${strokesList.length}笔</span>
+                            </div>
+                            <div class="stroke-order-list">
+                                ${strokesList.map((s, si) => `<span class="stroke-item"><span class="stroke-num">${si+1}</span><span class="stroke-name">${s}</span></span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join('');
@@ -1028,6 +1065,13 @@ const Modules = {
         const lesson = COURSE_DATA.chinese.units.flatMap(u => u.lessons).find(l => l.title === title);
         if (!lesson) return;
         const isDone = Store.data.lessonProgress[title] === 'done';
+        const lessonText = (typeof LESSON_TEXTS !== 'undefined' ? LESSON_TEXTS[title] : '') || '';
+        const textHtml = lessonText ? `
+            <div style="margin-bottom:12px;">
+                <strong style="font-size:15px;color:#3A3A3A;">📖 课文原文</strong>
+                <div style="margin-top:8px;padding:14px;background:#FFFDE7;border:2px solid #FCD116;border-radius:10px;font-size:15px;color:#3A3A3A;line-height:2;max-height:300px;overflow-y:auto;">${lessonText.replace(/\n/g, '<br><br>')}</div>
+            </div>
+        ` : '';
         const wordsHtml = lesson.words.map(w => `<span style="display:inline-block;padding:4px 10px;margin:3px;background:#0057B8;color:#FFF;border:2px solid #E0E0E0;font-size:16px;border-radius:6px;">${w}</span>`).join('');
         let poemsHtml = '';
         if (lesson.poems) {
@@ -1040,6 +1084,7 @@ const Modules = {
             `).join('');
         }
         UI.modal(lesson.title, `
+            ${textHtml}
             <div style="margin-bottom:12px;">
                 <strong style="font-size:15px;color:#3A3A3A;">📌 学习要点</strong>
                 <p style="margin-top:6px;font-size:14px;color:#555;line-height:1.8;">${lesson.keyPoints}</p>
@@ -1056,20 +1101,20 @@ const Modules = {
     },
 
     toggleStudyStep(lessonKey, stepIndex) {
-        if (!Store.data.lessonProgress[lessonKey + '_steps']) {
-            Store.data.lessonProgress[lessonKey + '_steps'] = [];
-        }
-        const steps = Store.data.lessonProgress[lessonKey + '_steps'];
-        steps[stepIndex] = !steps[stepIndex];
-        if (steps[stepIndex]) {
-            Store.addPoints(2, '完成学习步骤');
-            Store.addPetExp(2);
-        }
-        Store.save();
-        App.render();
+        // 已废弃：现在使用拍照打卡 + 家长审核流程
+        // 保留方法以防其他地方调用
+        console.log('[toggleStudyStep] deprecated, use photo check-in instead');
     },
 
     completeLesson(title) {
+        // 检查4个学习步骤是否全部通过家长审核
+        for (let i = 0; i < 4; i++) {
+            const stepId = title + '_step_' + i;
+            if (!Modules.hasApprovedReview('chinese_step', stepId)) {
+                UI.toast('请先完成并通过所有学习步骤的家长审核', 'error');
+                return;
+            }
+        }
         Store.data.lessonProgress[title] = 'done';
         const lesson = COURSE_DATA.chinese.units.flatMap(u => u.lessons).find(l => l.title === title);
         Store.addPoints(lesson.points, '完成课文：' + title);
