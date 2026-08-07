@@ -1905,3 +1905,523 @@ body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center;
     body { background: #FFF; }
     body::before { display: none; }
 }
+
+/* ===== 田字格 ===== */
+.tianzi-grid {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    border: 2px solid #CE1126;
+    position: relative;
+    background: #FFF;
+    border-radius: 4px;
+}
+
+.tianzi-grid::before,
+.tianzi-grid::after {
+    content: '';
+    position: absolute;
+    background: #CE1126;
+    opacity: 0.3;
+}
+
+.tianzi-grid::before {
+    left: 50%;
+    top: 4px;
+    bottom: 4px;
+    width: 1px;
+    border-left: 1px dashed #CE1126;
+    background: none;
+}
+
+.tianzi-grid::after {
+    top: 50%;
+    left: 4px;
+    right: 4px;
+    height: 1px;
+    border-top: 1px dashed #CE1126;
+    background: none;
+}
+
+.tianzi-char {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-family: 'KaiTi', 'STKaiti', 'Microsoft YaHei', serif;
+    color: #1A1A1A;
+    z-index: 2;
+}
+
+.tianzi-char.empty {
+    color: #CCC;
+    font-size: 40px;
+}
+
+/* 生字卡片 */
+.char-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--brick-shadow-sm);
+    transition: all 0.15s ease;
+    border: 2px solid #EEE;
+}
+
+.char-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--brick-shadow);
+}
+
+.char-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.char-card-info {
+    flex: 1;
+}
+
+.char-card-pinyin {
+    font-size: 16px;
+    color: #888;
+    margin-bottom: 2px;
+}
+
+.char-card-meta {
+    font-size: 12px;
+    color: #AAA;
+}
+
+.char-card-groups {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.char-group-tag {
+    font-size: 14px;
+    padding: 4px 12px;
+    background: #E3F2FD;
+    color: #0057B8;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+/* 听写卡片 */
+.dictation-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--brick-shadow-sm);
+    text-align: center;
+    margin-bottom: 14px;
+}
+
+.dictation-char-display {
+    font-size: 72px;
+    font-family: 'KaiTi', 'STKaiti', 'Microsoft YaHei', serif;
+    color: var(--lego-blue);
+    margin: 16px 0;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 近反义词卡片 */
+.antonym-card {
+    background: #FFF;
+    border-radius: var(--radius-md);
+    padding: 14px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    border-left: 4px solid var(--lego-orange);
+    margin-bottom: 10px;
+}
+
+.antonym-word {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+.antonym-pair {
+    display: flex;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.antonym-near { color: var(--lego-green); }
+.antonym-opposite { color: var(--lego-red); }
+
+/* 成语标签 */
+.idiom-tag {
+    display: inline-block;
+    font-size: 16px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+    color: #5D4037;
+    border-radius: var(--radius-md);
+    border: 2px solid #FFD54F;
+    font-weight: 600;
+    margin: 4px;
+}
+
+/* 易错字卡片 */
+.easy-wrong-card {
+    background: #FFEBEE;
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-left: 4px solid var(--lego-red);
+}
+
+.easy-wrong-char {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--lego-red);
+    margin-right: 8px;
+}
+
+.easy-wrong-tip {
+    font-size: 13px;
+    color: #555;
+}
+
+/* 写话卡片 */
+.writing-prompt-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--brick-shadow-sm);
+    margin-bottom: 14px;
+    border: 2px solid #EEE;
+    transition: all 0.15s ease;
+}
+
+.writing-prompt-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--brick-shadow);
+}
+
+.writing-prompt-icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+
+.writing-prompt-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+.writing-prompt-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.8;
+    margin-bottom: 10px;
+}
+
+.writing-prompt-tip {
+    font-size: 13px;
+    color: #555;
+    padding: 10px 14px;
+    background: #E3F2FD;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--lego-blue);
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+.writing-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px 14px;
+    border: 2px solid #E0E0E0;
+    border-radius: var(--radius-md);
+    font-family: var(--font-main);
+    font-size: 15px;
+    line-height: 1.8;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.writing-textarea:focus {
+    border-color: var(--lego-blue);
+    box-shadow: 0 0 0 4px rgba(0,87,184,0.1);
+}
+
+/* 标点练习 */
+.punctuation-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--brick-shadow-sm);
+    margin-bottom: 14px;
+}
+
+.punctuation-sentence {
+    font-size: 18px;
+    color: var(--text-main);
+    margin: 12px 0;
+    line-height: 2;
+}
+
+.punctuation-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.punctuation-option {
+    padding: 10px 20px;
+    background: #F0F0F0;
+    border: 2px solid #DDD;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: 'KaiTi', 'STKaiti', 'Microsoft YaHei', serif;
+}
+
+.punctuation-option:hover {
+    background: #E3F2FD;
+    border-color: var(--lego-blue);
+}
+
+.punctuation-option.correct {
+    background: #C8E6C9;
+    border-color: var(--lego-green);
+    color: var(--lego-green-dark);
+}
+
+.punctuation-option.wrong {
+    background: #FFCDD2;
+    border-color: var(--lego-red);
+    color: var(--lego-red-dark);
+}
+
+/* 错题本卡片 */
+.mistake-card {
+    background: #FFF;
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    margin-bottom: 10px;
+    border-left: 4px solid var(--lego-red);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mistake-type {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.mistake-type.word { background: #FFCDD2; color: var(--lego-red-dark); }
+.mistake-type.reading { background: #FFE0B2; color: var(--lego-orange-dark); }
+
+.mistake-content {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.mistake-date {
+    font-size: 12px;
+    color: #888;
+}
+
+/* 阅读记录卡片 */
+.reading-record-card {
+    background: #FFF;
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    margin-bottom: 10px;
+    border-left: 4px solid var(--lego-green);
+}
+
+.reading-record-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.reading-record-meta {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+/* 摘抄卡片 */
+.excerpt-card {
+    background: linear-gradient(135deg, #FFFDE7 0%, #FFF9C4 100%);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border: 2px solid #FFD54F;
+}
+
+.excerpt-text {
+    font-size: 15px;
+    color: #5D4037;
+    line-height: 1.8;
+    font-family: 'KaiTi', 'STKaiti', 'Microsoft YaHei', serif;
+}
+
+.excerpt-source {
+    font-size: 12px;
+    color: #8D6E63;
+    margin-top: 6px;
+}
+
+/* 当前课文指示器 */
+.current-lesson-banner {
+    background: var(--lego-blue);
+    background-image: linear-gradient(135deg, var(--lego-blue-light) 0%, var(--lego-blue) 100%);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    color: #FFF;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--brick-shadow-sm);
+}
+
+.current-lesson-banner .lesson-icon {
+    font-size: 32px;
+}
+
+.current-lesson-banner .lesson-info {
+    flex: 1;
+}
+
+.current-lesson-banner .lesson-name {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.current-lesson-banner .lesson-hint {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+/* 学习步骤卡片 */
+.study-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #FFF;
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    border: 2px solid #EEE;
+    transition: all 0.15s ease;
+}
+
+.study-step:hover {
+    transform: translateX(4px);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.1);
+}
+
+.study-step.done {
+    border-color: var(--lego-green);
+    background: #E8F5E9;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--lego-yellow);
+    background-image: linear-gradient(to bottom, var(--lego-yellow-light), var(--lego-yellow));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--lego-black);
+    flex-shrink: 0;
+    box-shadow: 0 2px 0 var(--lego-yellow-dark);
+}
+
+.study-step.done .step-number {
+    background: var(--lego-green);
+    background-image: linear-gradient(to bottom, var(--lego-green-light), var(--lego-green));
+    color: #FFF;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.step-desc {
+    font-size: 13px;
+    color: #666;
+    margin-top: 2px;
+}
+
+/* 复习卡片 */
+.review-unit-card {
+    background: #FFF;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--brick-shadow-sm);
+    margin-bottom: 14px;
+    border: 2px solid #EEE;
+}
+
+.review-unit-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.review-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #F5F5F5;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+}
+
+.review-item-name {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+/* 响应式补充 */
+@media (max-width: 768px) {
+    .tianzi-grid { width: 64px; height: 64px; }
+    .tianzi-char { font-size: 36px; }
+    .tianzi-char.empty { font-size: 28px; }
+    .dictation-char-display { font-size: 56px; }
+    .char-card { padding: 12px; }
+}

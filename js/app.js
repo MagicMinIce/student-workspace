@@ -31,7 +31,16 @@ const Store = {
         pendingReviews: [],
         customTasks: {plan:[], labor:[], sports:[], rewards:[]},
         hiddenPreset: {plan:[], labor:[], sports:[], rewards:[]},
-        parentPin: '1234'
+        parentPin: '1234',
+        // 语文扩展
+        currentLesson: null,
+        dictationProgress: {},
+        readingRecords: [],
+        excerptRecords: [],
+        writingRecords: [],
+        mistakeBook: [],
+        reviewProgress: {},
+        punctuationProgress: {}
     },
 
     init() {
@@ -513,114 +522,37 @@ const Modules = {
     chinese() {
         Store.markModuleUsed('chinese');
         const data = COURSE_DATA.chinese;
-        const tab = App.currentTab || 'lessons';
+        const tab = App.currentTab || 'textbook';
+        const allLessons = data.units.flatMap(u => u.lessons);
+        if (!Store.data.currentLesson && allLessons.length > 0) {
+            const doneLessons = allLessons.filter(l => Store.data.lessonProgress[l.title] === 'done');
+            const nextLesson = allLessons[doneLessons.length] || allLessons[0];
+            Store.data.currentLesson = nextLesson.title;
+        }
+        const currentLesson = allLessons.find(l => l.title === Store.data.currentLesson) || allLessons[0];
 
         let tabsHtml = `
             <div class="tabs">
-                <div class="tab ${tab==='lessons'?'active':''}" onclick="App.setTab('lessons')">📚 课文学习</div>
-                <div class="tab ${tab==='words'?'active':''}" onclick="App.setTab('words')">✏️ 生字词</div>
-                <div class="tab ${tab==='poems'?'active':''}" onclick="App.setTab('poems')">📜 古诗背诵</div>
+                <div class="tab ${tab==='textbook'?'active':''}" onclick="App.setTab('textbook')">📖 课本同步</div>
+                <div class="tab ${tab==='words'?'active':''}" onclick="App.setTab('words')">✏️ 字词积累</div>
+                <div class="tab ${tab==='reading'?'active':''}" onclick="App.setTab('reading')">📚 阅读学习</div>
+                <div class="tab ${tab==='writing'?'active':''}" onclick="App.setTab('writing')">✍️ 写话写作</div>
+                <div class="tab ${tab==='review'?'active':''}" onclick="App.setTab('review')">🔄 复习错题</div>
             </div>
         `;
 
         let content = '';
 
-        if (tab === 'lessons') {
-            content = data.units.map(unit => {
-                const lessons = unit.lessons.map(lesson => {
-                    const isDone = Store.data.lessonProgress[lesson.title] === 'done';
-                    return `
-                        <div class="lesson-card" onclick="Modules.openLesson('${lesson.title.replace(/'/g,"\\'")}')">
-                            <div class="lesson-header" style="background:${data.gradient};">
-                                <div class="lesson-status ${isDone?'done':''}">${isDone?'✓':'📖'}</div>
-                                <div class="lesson-title">${lesson.title}</div>
-                                <div class="lesson-subtitle">${lesson.subtitle}</div>
-                            </div>
-                            <div class="lesson-body">
-                                <div class="lesson-content">${lesson.keyPoints}</div>
-                                <div class="lesson-tags">
-                                    <span class="lesson-tag">+${lesson.points} 💎</span>
-                                    <span class="lesson-tag">${lesson.words.length} 生字</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                return `
-                    <div style="margin-bottom:20px;">
-                        <h3 style="font-size:16px;font-weight:bold;color:#FFF;margin-bottom:12px;">📦 ${unit.name}</h3>
-                        <div class="subject-grid">${lessons}</div>
-                    </div>
-                `;
-            }).join('');
+        if (tab === 'textbook') {
+            content = Modules.renderChineseTextbook(data, currentLesson, allLessons);
         } else if (tab === 'words') {
-            const allWords = [];
-            data.units.forEach(unit => unit.lessons.forEach(lesson => {
-                lesson.words.forEach(word => {
-                    allWords.push({ word: word, lesson: lesson.title });
-                });
-            }));
-            const learned = allWords.filter(w => Store.data.vocabProgress[w.word]).length;
-
-            content = `
-                <div class="lego-panel" style="margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:16px;font-weight:bold;color:#3A3A3A;">✏️ 生字词学习</span>
-                        <span style="font-size:14px;color:#666;">已学 ${learned} / ${allWords.length} 字</span>
-                    </div>
-                    <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill redstone" style="width:${learned/allWords.length*100}%"></div></div>
-                </div>
-                <div class="grid grid-3">
-                    ${allWords.map((w, i) => {
-                        const isLearned = Store.data.vocabProgress[w.word];
-                        return `
-                            <div class="vocab-card" style="${isLearned?'border-color:#00852B #006B1F #006B1F #00852B;':''}">
-                                <div class="vocab-word">${w.word}</div>
-                                <div class="vocab-example" style="font-size:12px;">${w.lesson}</div>
-                                <div style="margin-top:8px;">
-                                    ${isLearned
-                                        ? '<span style="font-size:12px;color:#00852B;font-weight:bold;">✅ 已学习</span>'
-                                        : `<button class="lego-btn lego-btn-green" style="font-size:12px;padding:6px 14px;" onclick="Modules.learnWord('${w.word}')">标记已学 +2💎</button>`
-                                    }
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        } else if (tab === 'poems') {
-            content = `
-                <div class="lego-panel" style="margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:16px;font-weight:bold;color:#3A3A3A;">📜 古诗背诵</span>
-                        <span style="font-size:14px;color:#666;">已背 ${Object.keys(Store.data.poemProgress).length} / ${data.poems.length} 首</span>
-                    </div>
-                    <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill gold" style="width:${Object.keys(Store.data.poemProgress).length/data.poems.length*100}%"></div></div>
-                </div>
-                <div class="grid grid-2">
-                    ${data.poems.map(poem => {
-                        const isDone = Store.data.poemProgress[poem.title];
-                        return `
-                            <div class="lego-panel" style="${isDone?'border-color:#FCD116 #B8860B #B8860B #FCD116;':''}">
-                                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
-                                    <div>
-                                        <h3 style="font-size:18px;font-weight:bold;color:#3A3A3A;">${poem.title}</h3>
-                                        <p style="font-size:12px;color:#666;">[${poem.grade}] ${poem.author}</p>
-                                    </div>
-                                    ${isDone ? '<span style="font-size:24px;">✅</span>' : ''}
-                                </div>
-                                <div style="font-size:15px;color:#3A3A3A;line-height:2;text-align:center;padding:12px;background:#FCD116;color:#333;border:2px solid #E0E0E0;">
-                                    ${poem.content}
-                                </div>
-                                ${isDone
-                                    ? '<p style="margin-top:8px;font-size:13px;color:#00852B;font-weight:bold;text-align:center;">✅ 已背诵</p>'
-                                    : `<button class="lego-btn lego-btn-gold" style="width:100%;margin-top:10px;" onclick="Modules.recitePoem('${poem.title}')">📜 标记已背诵 +10💎</button>`
-                                }
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
+            content = Modules.renderChineseWords(currentLesson);
+        } else if (tab === 'reading') {
+            content = Modules.renderChineseReading(currentLesson, data);
+        } else if (tab === 'writing') {
+            content = Modules.renderChineseWriting();
+        } else if (tab === 'review') {
+            content = Modules.renderChineseReview(data, allLessons);
         }
 
         return `
@@ -633,24 +565,480 @@ const Modules = {
         `;
     },
 
-    openLesson(title) {
+    // 课本同步学习
+    renderChineseTextbook(data, currentLesson, allLessons) {
+        const banner = `
+            <div class="current-lesson-banner">
+                <div class="lesson-icon">📖</div>
+                <div class="lesson-info">
+                    <div class="lesson-name">${currentLesson.title}</div>
+                    <div class="lesson-hint">${currentLesson.subtitle} · 每天一课，按顺序学习</div>
+                </div>
+                <button class="lego-btn lego-btn-yellow" style="font-size:13px;padding:8px 16px;" onclick="Modules.openLessonDetail('${currentLesson.title.replace(/'/g,"\\'")}')">查看详情</button>
+            </div>
+        `;
+
+        const lessonKey = currentLesson.title;
+        const steps = Store.data.lessonProgress[lessonKey + '_steps'] || [];
+        const studySteps = [
+            { title: '预习读课文', desc: '朗读课文2-3遍，了解大意', icon: '📖' },
+            { title: '圈出生字', desc: '在课文中圈出本课生字，尝试认读', icon: '✏️' },
+            { title: '朗读背诵', desc: '流利朗读课文，尝试背诵精彩段落', icon: '🗣️' },
+            { title: '完成课后习题', desc: '完成课后练习题，巩固所学', icon: '📝' }
+        ];
+        const stepsHtml = studySteps.map((s, i) => {
+            const done = steps[i];
+            return `
+                <div class="study-step ${done?'done':''}" onclick="Modules.toggleStudyStep('${lessonKey.replace(/'/g,"\\'")}', ${i})">
+                    <div class="step-number">${done?'✓':i+1}</div>
+                    <div class="step-content">
+                        <div class="step-title">${s.icon} ${s.title}</div>
+                        <div class="step-desc">${s.desc}</div>
+                    </div>
+                    <span style="font-size:12px;color:${done?'#00852B':'#888'};font-weight:700;">${done?'已完成':'点击完成'}</span>
+                </div>
+            `;
+        }).join('');
+
+        const allDone = steps.length === 4 && steps.every(s => s);
+        const completeBtn = allDone && Store.data.lessonProgress[lessonKey] !== 'done'
+            ? `<button class="lego-btn lego-btn-green" style="width:100%;margin-top:12px;" onclick="Modules.completeLesson('${lessonKey.replace(/'/g,"\\'")}')">🎉 全部步骤完成！领取奖励 +${currentLesson.points}💎</button>`
+            : (Store.data.lessonProgress[lessonKey] === 'done'
+                ? '<div style="text-align:center;padding:12px;background:#E8F5E9;border-radius:12px;color:#00852B;font-weight:700;">✅ 本课已完成</div>'
+                : '');
+
+        const unitsHtml = data.units.map(unit => {
+            const lessons = unit.lessons.map(lesson => {
+                const isDone = Store.data.lessonProgress[lesson.title] === 'done';
+                const isCurrent = lesson.title === currentLesson.title;
+                return `
+                    <div class="lesson-card" style="${isCurrent?'border:3px solid #FCD116;':''}" onclick="Modules.setCurrentLesson('${lesson.title.replace(/'/g,"\\'")}')">
+                        <div class="lesson-header" style="background:${data.gradient};">
+                            <div class="lesson-status ${isDone?'done':''}">${isDone?'✓':isCurrent?'📍':'📖'}</div>
+                            <div class="lesson-title">${lesson.title}</div>
+                            <div class="lesson-subtitle">${lesson.subtitle}</div>
+                        </div>
+                        <div class="lesson-body">
+                            <div class="lesson-content">${lesson.keyPoints}</div>
+                            <div class="lesson-tags">
+                                <span class="lesson-tag">+${lesson.points} 💎</span>
+                                <span class="lesson-tag">${lesson.words.length} 生字</span>
+                                ${isCurrent?'<span class="lesson-tag" style="background:#FCD116;color:#333;">当前课文</span>':''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            return `
+                <div style="margin-bottom:20px;">
+                    <h3 style="font-size:16px;font-weight:bold;color:#FFF;margin-bottom:12px;">📦 ${unit.name}</h3>
+                    <div class="subject-grid">${lessons}</div>
+                </div>
+            `;
+        }).join('');
+
+        let poemsHtml = '';
+        if (currentLesson.poems) {
+            poemsHtml = currentLesson.poems.map(p => {
+                const isDone = Store.data.poemProgress[p.title];
+                return `
+                    <div class="lego-panel" style="margin-top:12px;${isDone?'border-color:#FCD116 #B8860B #B8860B #FCD116;':''}">
+                        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                            <div>
+                                <h3 style="font-size:18px;font-weight:bold;color:#3A3A3A;">${p.title}</h3>
+                                <p style="font-size:12px;color:#666;">${p.author}</p>
+                            </div>
+                            ${isDone ? '<span style="font-size:24px;">✅</span>' : ''}
+                        </div>
+                        <div style="font-size:15px;color:#3A3A3A;line-height:2;text-align:center;padding:12px;background:#FCD116;color:#333;border:2px solid #E0E0E0;border-radius:8px;">
+                            ${p.content}
+                        </div>
+                        <div style="font-size:12px;margin-top:8px;color:#666;text-align:center;">${p.meaning}</div>
+                        ${isDone
+                            ? '<p style="margin-top:8px;font-size:13px;color:#00852B;font-weight:bold;text-align:center;">✅ 已背诵</p>'
+                            : `<button class="lego-btn lego-btn-gold" style="width:100%;margin-top:10px;" onclick="Modules.recitePoem('${p.title}')">📜 标记已背诵 +10💎</button>`
+                        }
+                    </div>
+                `;
+            }).join('');
+        }
+
+        return `
+            ${banner}
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📋 今日学习步骤</h3>
+                ${stepsHtml}
+                ${completeBtn}
+            </div>
+            ${currentLesson.poems ? `<div class="lego-panel" style="margin-bottom:16px;"><h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:8px;">📜 本课古诗</h3>${poemsHtml}</div>` : ''}
+            <h3 style="font-size:16px;font-weight:bold;color:#FFF;margin-bottom:12px;">📚 全部课文（点击切换当前课文）</h3>
+            ${unitsHtml}
+        `;
+    },
+
+    // 字词积累
+    renderChineseWords(currentLesson) {
+        const extra = CHINESE_EXTRA[currentLesson.title] || {};
+        const charDetails = extra.charDetails || currentLesson.words.map(w => ({ char: w, pinyin: '', strokes: 0, radical: '', groups: [] }));
+        const learned = charDetails.filter(c => Store.data.vocabProgress[c.char]).length;
+
+        const charsHtml = charDetails.map(c => {
+            const isLearned = Store.data.vocabProgress[c.char];
+            return `
+                <div class="char-card">
+                    <div class="char-card-header">
+                        <div class="tianzi-grid"><div class="tianzi-char">${c.char}</div></div>
+                        <div class="char-card-info">
+                            <div class="char-card-pinyin">${c.pinyin || ''}</div>
+                            <div class="char-card-meta">${c.strokes ? c.strokes + '画' : ''} ${c.radical ? '· ' + c.radical + '部' : ''}</div>
+                            <div style="margin-top:6px;">
+                                ${isLearned
+                                    ? '<span style="font-size:12px;color:#00852B;font-weight:700;">✅ 已学会</span>'
+                                    : `<button class="lego-btn lego-btn-green" style="font-size:11px;padding:4px 12px;" onclick="Modules.learnChar('${c.char}')">标记已学 +2💎</button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    ${c.groups && c.groups.length > 0 ? `<div class="char-card-groups">${c.groups.map(g => `<span class="char-group-tag">${g}</span>`).join('')}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // 听写
+        const dictKey = currentLesson.title;
+        const dictationDone = Store.data.dictationProgress[dictKey];
+        const dictationHtml = `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;">🎤 听写巩固</h3>
+                    ${dictationDone ? '<span style="font-size:13px;color:#00852B;font-weight:700;">✅ 已完成听写</span>' : ''}
+                </div>
+                <p style="font-size:14px;color:#666;margin-bottom:12px;">点击"开始听写"，屏幕依次显示拼音，请在纸上写出对应的生字，写完后点击"显示答案"对照。</p>
+                <div class="dictation-card" id="dictationArea">
+                    <div class="dictation-char-display" id="dictationChar">点击下方按钮开始听写</div>
+                    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                        <button class="lego-btn lego-btn-blue" onclick="Modules.startDictation('${dictKey.replace(/'/g,"\\'")}')">开始听写</button>
+                        <button class="lego-btn lego-btn-green" id="dictationReveal" style="display:none;" onclick="Modules.revealDictation()">显示答案</button>
+                        <button class="lego-btn lego-btn-yellow" id="dictationNext" style="display:none;" onclick="Modules.nextDictation()">下一个</button>
+                    </div>
+                    <div id="dictationProgress" style="margin-top:10px;font-size:14px;color:#666;"></div>
+                </div>
+            </div>
+        `;
+
+        // 近反义词
+        let antonymsHtml = '';
+        if (extra.antonyms && extra.antonyms.length > 0) {
+            antonymsHtml = `
+                <div class="lego-panel" style="margin-bottom:16px;">
+                    <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">🔄 近反义词积累</h3>
+                    ${extra.antonyms.map(a => `
+                        <div class="antonym-card">
+                            <div class="antonym-word">${a.word}</div>
+                            <div class="antonym-pair">
+                                <span class="antonym-near">近义：${a.near}</span>
+                                <span class="antonym-opposite">反义：${a.opposite}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 成语
+        let idiomsHtml = '';
+        if (extra.idioms && extra.idioms.length > 0) {
+            idiomsHtml = `
+                <div class="lego-panel" style="margin-bottom:16px;">
+                    <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">🌟 成语积累</h3>
+                    <div>${extra.idioms.map(i => `<span class="idiom-tag">${i}</span>`).join('')}</div>
+                </div>
+            `;
+        }
+
+        // 易错字
+        let easyWrongHtml = '';
+        if (extra.easyWrong && extra.easyWrong.length > 0) {
+            easyWrongHtml = `
+                <div class="lego-panel" style="margin-bottom:16px;">
+                    <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">⚠️ 易错字提醒</h3>
+                    ${extra.easyWrong.map(e => `
+                        <div class="easy-wrong-card">
+                            <span class="easy-wrong-char">${e.word}</span>
+                            <span class="easy-wrong-tip">${e.tip}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        return `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:16px;font-weight:bold;color:#3A3A3A;">✏️ ${currentLesson.title} · 生字学习</span>
+                    <span style="font-size:14px;color:#666;">已学 ${learned} / ${charDetails.length} 字</span>
+                </div>
+                <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill red" style="width:${charDetails.length > 0 ? learned/charDetails.length*100 : 0}%"></div></div>
+            </div>
+            <div class="grid grid-2" style="margin-bottom:16px;">
+                ${charsHtml}
+            </div>
+            ${dictationHtml}
+            ${antonymsHtml}
+            ${idiomsHtml}
+            ${easyWrongHtml}
+        `;
+    },
+
+    // 阅读学习
+    renderChineseReading(currentLesson, data) {
+        // 课外阅读记录
+        const readingRecords = Store.data.readingRecords || [];
+        const todayKey = Store.todayKey();
+        const todayRead = readingRecords.find(r => r.date === todayKey);
+
+        const readingForm = `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📘 每日课外阅读（15-20分钟）</h3>
+                ${todayRead
+                    ? `<div style="padding:12px;background:#E8F5E9;border-radius:8px;color:#00852B;font-weight:600;">✅ 今日已阅读《${todayRead.bookName}》${todayRead.minutes}分钟 +5💎</div>`
+                    : `
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+                            <input type="text" id="readingBookName" placeholder="书名" style="flex:1;min-width:150px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:8px;font-size:14px;outline:none;">
+                            <select id="readingMinutes" style="padding:10px 14px;border:2px solid #E0E0E0;border-radius:8px;font-size:14px;outline:none;">
+                                <option value="15">15分钟</option>
+                                <option value="20">20分钟</option>
+                                <option value="30">30分钟</option>
+                            </select>
+                        </div>
+                        <button class="lego-btn lego-btn-green" style="width:100%;" onclick="Modules.saveReadingRecord()">📝 记录今日阅读 +5💎</button>
+                    `
+                }
+                <div style="margin-top:12px;font-size:13px;color:#888;">本周已阅读 ${readingRecords.filter(r => { const d = new Date(r.date); const now = new Date(); return (now - d) / 86400000 < 7; }).length} 天</div>
+            </div>
+        `;
+
+        // 摘抄好词好句
+        const excerpts = Store.data.excerptRecords || [];
+        const excerptList = excerpts.slice(-5).reverse().map(e => `
+            <div class="excerpt-card">
+                <div class="excerpt-text">${e.text}</div>
+                <div class="excerpt-source">—— ${e.source || '课外阅读'} · ${e.date || ''}</div>
+            </div>
+        `).join('');
+
+        const excerptForm = `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">✨ 摘抄好词好句</h3>
+                <textarea id="excerptText" class="writing-textarea" style="min-height:60px;margin-bottom:10px;" placeholder="抄写阅读中发现的好词好句..."></textarea>
+                <input type="text" id="excerptSource" placeholder="来源（书名/课文）" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:8px;font-size:14px;margin-bottom:10px;outline:none;">
+                <button class="lego-btn lego-btn-yellow" style="width:100%;" onclick="Modules.saveExcerpt()">✨ 保存摘抄 +3💎</button>
+                ${excerptList ? `<div style="margin-top:14px;"><h4 style="font-size:14px;font-weight:bold;color:#3A3A3A;margin-bottom:8px;">最近的摘抄</h4>${excerptList}</div>` : ''}
+            </div>
+        `;
+
+        // 课内阅读理解
+        const inClassReading = `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:8px;">📖 课内阅读：${currentLesson.title}</h3>
+                <p style="font-size:14px;color:#555;line-height:1.8;margin-bottom:10px;">${currentLesson.keyPoints}</p>
+                <div style="padding:12px;background:#E3F2FD;border-radius:8px;border-left:4px solid #0057B8;">
+                    <p style="font-size:14px;color:#0057B8;line-height:1.8;">
+                        <strong>阅读要求：</strong><br>
+                        1. 流利朗读课文，注意停顿和语气<br>
+                        2. 读懂课文内容，能回答问题<br>
+                        3. 体会作者表达的感情<br>
+                        4. 能用自己的话复述课文大意
+                    </p>
+                </div>
+                <button class="lego-btn lego-btn-blue" style="width:100%;margin-top:10px;" onclick="Modules.openLessonDetail('${currentLesson.title.replace(/'/g,"\\'")}')">📖 查看课文详情</button>
+            </div>
+        `;
+
+        // 口头复述
+        const retellForm = `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:8px;">🗣️ 口头复述故事</h3>
+                <p style="font-size:14px;color:#666;line-height:1.8;">读完课文后，试着用自己的话把故事讲给爸爸妈妈听。</p>
+                <div style="display:flex;gap:10px;margin-top:10px;">
+                    <button class="lego-btn lego-btn-green" style="flex:1;" onclick="Modules.markRetellDone('${currentLesson.title.replace(/'/g,"\\'")}')">✅ 已完成复述 +3💎</button>
+                </div>
+            </div>
+        `;
+
+        // 古诗背诵（如果有）
+        let poemsHtml = '';
+        if (currentLesson.poems) {
+            poemsHtml = `
+                <div class="lego-panel" style="margin-bottom:16px;">
+                    <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📜 古诗背诵</h3>
+                    ${currentLesson.poems.map(p => {
+                        const isDone = Store.data.poemProgress[p.title];
+                        return `
+                            <div class="lego-panel" style="${isDone?'border-color:#FCD116 #B8860B #B8860B #FCD116;':''}margin-bottom:10px;">
+                                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                                    <h4 style="font-size:16px;font-weight:bold;color:#3A3A3A;">${p.title} · ${p.author}</h4>
+                                    ${isDone ? '<span style="font-size:20px;">✅</span>' : ''}
+                                </div>
+                                <div style="font-size:15px;color:#3A3A3A;line-height:2;text-align:center;padding:12px;background:#FCD116;color:#333;border:2px solid #E0E0E0;border-radius:8px;">${p.content}</div>
+                                <div style="font-size:12px;margin-top:6px;color:#666;text-align:center;">${p.meaning}</div>
+                                ${isDone
+                                    ? '<p style="margin-top:8px;font-size:13px;color:#00852B;font-weight:bold;text-align:center;">✅ 已背诵</p>'
+                                    : `<button class="lego-btn lego-btn-gold" style="width:100%;margin-top:10px;" onclick="Modules.recitePoem('${p.title}')">📜 标记已背诵 +10💎</button>`
+                                }
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        return inClassReading + readingForm + retellForm + excerptForm + poemsHtml;
+    },
+
+    // 写话写作
+    renderChineseWriting() {
+        // 看图写话
+        const writingPrompts = (typeof WRITING_PROMPTS !== 'undefined' ? WRITING_PROMPTS : []).map(p => {
+            const saved = Store.data.writingRecords.find(w => w.promptId === p.id);
+            return `
+                <div class="writing-prompt-card">
+                    <div class="writing-prompt-icon">${p.icon}</div>
+                    <div class="writing-prompt-title">${p.title}</div>
+                    <div class="writing-prompt-desc">${p.desc}</div>
+                    <div class="writing-prompt-tip">${p.tip}</div>
+                    <textarea class="writing-textarea" id="writing_${p.id}" placeholder="在这里写话...">${saved ? saved.content : ''}</textarea>
+                    <button class="lego-btn lego-btn-green" style="width:100%;margin-top:10px;" onclick="Modules.saveWriting('${p.id}')">${saved ? '💾 更新保存' : '📝 保存写话 +5💎'}</button>
+                </div>
+            `;
+        }).join('');
+
+        // 标点练习
+        const punctuationExercises = (typeof PUNCTUATION_EXERCISES !== 'undefined' ? PUNCTUATION_EXERCISES : []).map(ex => {
+            const answered = Store.data.punctuationProgress[ex.id];
+            return `
+                <div class="punctuation-card" id="punct_${ex.id}">
+                    <h4 style="font-size:15px;font-weight:bold;color:#3A3A3A;">✏️ ${ex.sentence}</h4>
+                    <div style="font-size:13px;color:#888;margin-top:4px;">选择正确的标点填入：</div>
+                    <div class="punctuation-options" style="margin-top:10px;">
+                        ${ex.options.map((opt, i) => `
+                            <div class="punctuation-option ${answered && answered.correct === i ? 'correct' : answered && answered.selected === i && answered.correct !== i ? 'wrong' : ''}" onclick="Modules.checkPunctuation('${ex.id}', ${i})">${opt}</div>
+                        `).join('')}
+                    </div>
+                    <div id="punct_explain_${ex.id}" style="margin-top:8px;font-size:13px;${answered ? '' : 'display:none;'}">${answered ? '<span style="color:' + (answered.selected === answered.correct ? '#00852B' : '#CE1126') + ';">' + (answered.selected === answered.correct ? '✅ 正确！' : '❌ 再想想') + '</span> ' + ex.explain : ''}</div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">✍️ 看图写话练习</h3>
+                <p style="font-size:14px;color:#666;margin-bottom:12px;">抓住时间、地点、人物、事件四要素，正确使用标点符号。</p>
+            </div>
+            ${writingPrompts}
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">🔖 标点符号练习</h3>
+                <p style="font-size:14px;color:#666;margin-bottom:12px;">学会正确使用句号、问号、感叹号、逗号、冒号、引号、顿号。</p>
+            </div>
+            ${punctuationExercises}
+        `;
+    },
+
+    // 复习与错题
+    renderChineseReview(data, allLessons) {
+        // 单元复习
+        const unitsReview = data.units.map((unit, ui) => {
+            const lessons = unit.lessons.map(l => {
+                const isDone = Store.data.lessonProgress[l.title] === 'done';
+                return `
+                    <div class="review-item">
+                        <span style="font-size:16px;">${isDone ? '✅' : '⬜'}</span>
+                        <span class="review-item-name">${l.title}</span>
+                        <span style="font-size:12px;color:#888;">${l.words.length}字</span>
+                    </div>
+                `;
+            }).join('');
+            const unitKey = 'unit_' + ui;
+            const reviewDone = Store.data.reviewProgress[unitKey];
+            return `
+                <div class="review-unit-card">
+                    <div class="review-unit-title">
+                        📦 ${unit.name}
+                        ${reviewDone ? '<span style="font-size:12px;color:#00852B;font-weight:700;">✅ 已复习</span>' : ''}
+                    </div>
+                    ${lessons}
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        <button class="lego-btn lego-btn-blue" style="flex:1;font-size:13px;padding:8px;" onclick="Modules.markUnitReview(${ui})">${reviewDone ? '重新复习' : '标记已复习'} +5💎</button>
+                        <button class="lego-btn lego-btn-yellow" style="flex:1;font-size:13px;padding:8px;" onclick="Modules.startUnitDictation(${ui})">🎤 默写练习</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // 错题本
+        const mistakes = Store.data.mistakeBook || [];
+        const mistakesHtml = mistakes.length > 0
+            ? mistakes.map((m, i) => `
+                <div class="mistake-card">
+                    <span class="mistake-type ${m.type}">${m.type === 'word' ? '字词' : '阅读'}</span>
+                    <div class="mistake-content">${m.content}</div>
+                    <span class="mistake-date">${m.date || ''}</span>
+                    <button class="edit-btn delete" onclick="Modules.removeMistake(${i})">删除</button>
+                </div>
+            `).join('')
+            : '<div style="text-align:center;padding:20px;color:#888;">暂无错题，继续加油！</div>';
+
+        const addMistakeForm = `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📝 添加错题</h3>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+                    <select id="mistakeType" style="padding:10px 14px;border:2px solid #E0E0E0;border-radius:8px;font-size:14px;outline:none;">
+                        <option value="word">字词错题</option>
+                        <option value="reading">阅读错题</option>
+                    </select>
+                    <input type="text" id="mistakeContent" placeholder="输入错题内容..." style="flex:1;min-width:200px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:8px;font-size:14px;outline:none;">
+                </div>
+                <button class="lego-btn lego-btn-red" style="width:100%;" onclick="Modules.addMistake()">➕ 添加到错题本</button>
+                <p style="font-size:12px;color:#999;margin-top:8px;">提示：隔几天重复练习错题，加深记忆</p>
+            </div>
+        `;
+
+        return `
+            <div class="lego-panel" style="margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">🔄 单元复习与默写</h3>
+                <p style="font-size:14px;color:#666;margin-bottom:12px;">学完一个单元后，及时复习和默写，巩固所学知识。</p>
+            </div>
+            ${unitsReview}
+            ${addMistakeForm}
+            <div class="lego-panel">
+                <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📋 错题本（${mistakes.length}条）</h3>
+                ${mistakesHtml}
+            </div>
+        `;
+    },
+
+    // 语文辅助方法
+    setCurrentLesson(title) {
+        Store.data.currentLesson = title;
+        Store.save();
+        App.setTab('textbook');
+    },
+
+    openLessonDetail(title) {
         const lesson = COURSE_DATA.chinese.units.flatMap(u => u.lessons).find(l => l.title === title);
         if (!lesson) return;
-
         const isDone = Store.data.lessonProgress[title] === 'done';
-        const wordsHtml = lesson.words.map(w => `<span style="display:inline-block;padding:4px 10px;margin:3px;background:#0057B8;color:#FFF;border:2px solid #E0E0E0;font-size:16px;">${w}</span>`).join('');
-
+        const wordsHtml = lesson.words.map(w => `<span style="display:inline-block;padding:4px 10px;margin:3px;background:#0057B8;color:#FFF;border:2px solid #E0E0E0;font-size:16px;border-radius:6px;">${w}</span>`).join('');
         let poemsHtml = '';
         if (lesson.poems) {
             poemsHtml = lesson.poems.map(p => `
-                <div style="margin-top:12px;padding:12px;background:#FCD116;color:#333;border:2px solid #E0E0E0;text-align:center;">
+                <div style="margin-top:12px;padding:12px;background:#FCD116;color:#333;border:2px solid #E0E0E0;text-align:center;border-radius:8px;">
                     <div style="font-size:16px;font-weight:bold;margin-bottom:4px;">${p.title} · ${p.author}</div>
                     <div style="font-size:15px;line-height:2;">${p.content}</div>
                     <div style="font-size:12px;margin-top:8px;opacity:0.9;">${p.meaning}</div>
                 </div>
             `).join('');
         }
-
         UI.modal(lesson.title, `
             <div style="margin-bottom:12px;">
                 <strong style="font-size:15px;color:#3A3A3A;">📌 学习要点</strong>
@@ -661,10 +1049,24 @@ const Modules = {
                 <div style="margin-top:8px;">${wordsHtml}</div>
             </div>
             ${poemsHtml}
-            <div style="margin-top:16px;padding:12px;background:#FCD116;color:#333;border:2px solid #E0E0E0;">
+            <div style="margin-top:16px;padding:12px;background:#FCD116;color:#333;border:2px solid #E0E0E0;border-radius:8px;">
                 <strong>🎁 完成奖励：</strong>+${lesson.points} 积木币 + 伙伴经验
             </div>
-        `, isDone ? '' : `<button class="lego-btn lego-btn-green" onclick="Modules.completeLesson('${title.replace(/'/g,"\\'")}')">✅ 标记完成 +${lesson.points}💎</button><button class="lego-btn" onclick="UI.closeModal()">关闭</button>`);
+        `, isDone ? '<button class="lego-btn" onclick="UI.closeModal()">关闭</button>' : `<button class="lego-btn lego-btn-green" onclick="Modules.completeLesson('${title.replace(/'/g,"\\'")}')">✅ 标记完成 +${lesson.points}💎</button><button class="lego-btn" onclick="UI.closeModal()">关闭</button>`);
+    },
+
+    toggleStudyStep(lessonKey, stepIndex) {
+        if (!Store.data.lessonProgress[lessonKey + '_steps']) {
+            Store.data.lessonProgress[lessonKey + '_steps'] = [];
+        }
+        const steps = Store.data.lessonProgress[lessonKey + '_steps'];
+        steps[stepIndex] = !steps[stepIndex];
+        if (steps[stepIndex]) {
+            Store.addPoints(2, '完成学习步骤');
+            Store.addPetExp(2);
+        }
+        Store.save();
+        App.render();
     },
 
     completeLesson(title) {
@@ -673,18 +1075,17 @@ const Modules = {
         Store.addPoints(lesson.points, '完成课文：' + title);
         Store.addPetExp(10);
         Store.save();
-        UI.closeModal();
         UI.toast('🎉 完成课文学习！+' + lesson.points + ' 💎', 'success');
         UI.fireworks();
         App.render();
     },
 
-    learnWord(word) {
-        Store.data.vocabProgress[word] = true;
-        Store.addPoints(2, '学习生字：' + word);
+    learnChar(char) {
+        Store.data.vocabProgress[char] = true;
+        Store.addPoints(2, '学习生字：' + char);
         Store.addPetExp(2);
         Store.save();
-        UI.toast('✅ 学会了 "' + word + '" +2 💎', 'success');
+        UI.toast('✅ 学会了 "' + char + '" +2 💎', 'success');
         App.render();
     },
 
@@ -695,6 +1096,187 @@ const Modules = {
         Store.save();
         UI.toast('🎉 古诗背诵完成！+10 💎', 'success');
         UI.fireworks();
+        App.render();
+    },
+
+    // 听写功能
+    _dictationState: null,
+
+    startDictation(dictKey) {
+        const lesson = COURSE_DATA.chinese.units.flatMap(u => u.lessons).find(l => l.title === dictKey);
+        if (!lesson) return;
+        const extra = CHINESE_EXTRA[dictKey] || {};
+        const charDetails = extra.charDetails || lesson.words.map(w => ({ char: w, pinyin: '' }));
+        const chars = charDetails.map(c => ({ c: c.char, p: c.pinyin }));
+        Modules._dictationState = { dictKey, chars, index: 0, revealed: false };
+        Modules._showDictationChar();
+    },
+
+    _showDictationChar() {
+        const st = Modules._dictationState;
+        if (!st) return;
+        const el = document.getElementById('dictationChar');
+        const reveal = document.getElementById('dictationReveal');
+        const next = document.getElementById('dictationNext');
+        const progress = document.getElementById('dictationProgress');
+        if (!el) return;
+        if (st.index >= st.chars.length) {
+            el.innerHTML = '🎉 听写完成！';
+            el.style.color = '#00852B';
+            reveal.style.display = 'none';
+            next.style.display = 'none';
+            progress.textContent = `${st.chars.length}/${st.chars.length} 全部完成`;
+            Store.data.dictationProgress[st.dictKey] = true;
+            Store.addPoints(5, '完成听写：' + st.dictKey);
+            Store.addPetExp(5);
+            Store.save();
+            UI.toast('🎉 听写完成！+5 💎', 'success');
+            return;
+        }
+        const c = st.chars[st.index];
+        el.innerHTML = st.revealed ? c.c : `<span style="font-size:36px;color:#999;">${c.p || '拼音'}</span>`;
+        el.style.color = st.revealed ? '#0057B8' : '#999';
+        reveal.style.display = st.revealed ? 'none' : 'inline-flex';
+        next.style.display = st.revealed ? 'inline-flex' : 'none';
+        progress.textContent = `第 ${st.index + 1} / ${st.chars.length} 个`;
+    },
+
+    revealDictation() {
+        if (!Modules._dictationState) return;
+        Modules._dictationState.revealed = true;
+        Modules._showDictationChar();
+    },
+
+    nextDictation() {
+        if (!Modules._dictationState) return;
+        Modules._dictationState.index++;
+        Modules._dictationState.revealed = false;
+        Modules._showDictationChar();
+    },
+
+    // 阅读记录
+    saveReadingRecord() {
+        const bookName = document.getElementById('readingBookName').value.trim();
+        const minutes = document.getElementById('readingMinutes').value;
+        if (!bookName) { UI.toast('请输入书名', 'warning'); return; }
+        const todayKey = Store.todayKey();
+        if (!Store.data.readingRecords) Store.data.readingRecords = [];
+        Store.data.readingRecords.push({ date: todayKey, bookName, minutes: parseInt(minutes) });
+        Store.addPoints(5, '课外阅读：' + bookName);
+        Store.addPetExp(3);
+        Store.save();
+        UI.toast('✅ 阅读记录已保存 +5 💎', 'success');
+        App.render();
+    },
+
+    markRetellDone(lessonTitle) {
+        Store.addPoints(3, '口头复述：' + lessonTitle);
+        Store.addPetExp(2);
+        Store.save();
+        UI.toast('✅ 复述完成 +3 💎', 'success');
+        App.render();
+    },
+
+    // 摘抄
+    saveExcerpt() {
+        const text = document.getElementById('excerptText').value.trim();
+        const source = document.getElementById('excerptSource').value.trim();
+        if (!text) { UI.toast('请输入摘抄内容', 'warning'); return; }
+        if (!Store.data.excerptRecords) Store.data.excerptRecords = [];
+        const today = new Date();
+        const dateStr = (today.getMonth()+1) + '月' + today.getDate() + '日';
+        Store.data.excerptRecords.push({ text, source, date: dateStr });
+        Store.addPoints(3, '摘抄好词好句');
+        Store.addPetExp(2);
+        Store.save();
+        UI.toast('✅ 摘抄已保存 +3 💎', 'success');
+        App.render();
+    },
+
+    // 写话
+    saveWriting(promptId) {
+        const textarea = document.getElementById('writing_' + promptId);
+        if (!textarea) return;
+        const content = textarea.value.trim();
+        if (!content) { UI.toast('请先写一些内容', 'warning'); return; }
+        if (!Store.data.writingRecords) Store.data.writingRecords = [];
+        const existing = Store.data.writingRecords.findIndex(w => w.promptId === promptId);
+        const isNew = existing === -1;
+        const record = { promptId, content, date: new Date().toISOString() };
+        if (isNew) {
+            Store.data.writingRecords.push(record);
+            Store.addPoints(5, '完成写话练习');
+            Store.addPetExp(5);
+        } else {
+            Store.data.writingRecords[existing] = record;
+        }
+        Store.save();
+        UI.toast(isNew ? '✅ 写话已保存 +5 💎' : '✅ 写话已更新', 'success');
+        App.render();
+    },
+
+    // 标点练习
+    checkPunctuation(exId, selected) {
+        const ex = (typeof PUNCTUATION_EXERCISES !== 'undefined' ? PUNCTUATION_EXERCISES : []).find(e => e.id === exId);
+        if (!ex) return;
+        const correct = ex.options.indexOf(ex.answer);
+        Store.data.punctuationProgress[exId] = { selected, correct };
+        if (selected === correct) {
+            Store.addPoints(2, '标点练习正确');
+            Store.addPetExp(1);
+            UI.toast('✅ 正确！+2 💎', 'success');
+        } else {
+            UI.toast('❌ 再想想', 'warning');
+        }
+        Store.save();
+        App.render();
+    },
+
+    // 单元复习
+    markUnitReview(unitIndex) {
+        const key = 'unit_' + unitIndex;
+        const wasDone = Store.data.reviewProgress[key];
+        Store.data.reviewProgress[key] = true;
+        if (!wasDone) {
+            Store.addPoints(5, '单元复习');
+            Store.addPetExp(3);
+        }
+        Store.save();
+        UI.toast('✅ 复习记录已保存 +5 💎', 'success');
+        App.render();
+    },
+
+    startUnitDictation(unitIndex) {
+        const unit = COURSE_DATA.chinese.units[unitIndex];
+        if (!unit) return;
+        App.setTab('words');
+        setTimeout(() => {
+            const firstLesson = unit.lessons[0];
+            if (firstLesson) {
+                Modules.setCurrentLesson(firstLesson.title);
+            }
+        }, 100);
+        UI.toast('请在此页进行听写练习', 'info');
+    },
+
+    // 错题本
+    addMistake() {
+        const type = document.getElementById('mistakeType').value;
+        const content = document.getElementById('mistakeContent').value.trim();
+        if (!content) { UI.toast('请输入错题内容', 'warning'); return; }
+        if (!Store.data.mistakeBook) Store.data.mistakeBook = [];
+        const today = new Date();
+        const dateStr = (today.getMonth()+1) + '/' + today.getDate();
+        Store.data.mistakeBook.push({ type, content, date: dateStr });
+        Store.save();
+        UI.toast('✅ 已添加到错题本', 'success');
+        App.render();
+    },
+
+    removeMistake(index) {
+        if (!Store.data.mistakeBook) return;
+        Store.data.mistakeBook.splice(index, 1);
+        Store.save();
         App.render();
     },
 

@@ -492,6 +492,414 @@ const COURSE_DATA = {
     ]
 };
 
+// ===== 语文课程扩展数据（生字详情、近反义词、成语、易错字等）=====
+const CHINESE_EXTRA = {
+    "1. 小蝌蚪找妈妈": {
+        charDetails: [
+            { char: "塘", pinyin: "táng", strokes: 13, radical: "土", groups: ["池塘", "鱼塘"] },
+            { char: "脑", pinyin: "nǎo", strokes: 10, radical: "月", groups: ["大脑", "脑筋"] },
+            { char: "袋", pinyin: "dài", strokes: 11, radical: "衣", groups: ["口袋", "袋子"] },
+            { char: "灰", pinyin: "huī", strokes: 6, radical: "火", groups: ["灰色", "灰尘"] },
+            { char: "哇", pinyin: "wa", strokes: 9, radical: "口", groups: ["好哇", "哇哇叫"] },
+            { char: "教", pinyin: "jiāo", strokes: 11, radical: "攵", groups: ["教书", "教室"] },
+            { char: "捕", pinyin: "bǔ", strokes: 10, radical: "扌", groups: ["捕捉", "捕鱼"] },
+            { char: "迎", pinyin: "yíng", strokes: 7, radical: "辶", groups: ["迎接", "欢迎"] },
+            { char: "阿", pinyin: "ā", strokes: 8, radical: "阝", groups: ["阿姨", "阿哥"] },
+            { char: "姨", pinyin: "yí", strokes: 9, radical: "女", groups: ["阿姨", "姨妈"] },
+            { char: "宽", pinyin: "kuān", strokes: 10, radical: "宀", groups: ["宽广", "宽大"] },
+            { char: "龟", pinyin: "guī", strokes: 7, radical: "龟", groups: ["乌龟", "海龟"] },
+            { char: "顶", pinyin: "dǐng", strokes: 8, radical: "页", groups: ["头顶", "山顶"] },
+            { char: "披", pinyin: "pī", strokes: 8, radical: "扌", groups: ["披着", "披风"] },
+            { char: "鼓", pinyin: "gǔ", strokes: 13, radical: "鼓", groups: ["打鼓", "鼓声"] }
+        ],
+        antonyms: [
+            { word: "宽", near: "宽广、广阔", opposite: "狭窄、窄小" },
+            { word: "迎", near: "迎接、迎面", opposite: "送别、告别" }
+        ],
+        idioms: ["如鱼得水", "井底之蛙"],
+        easyWrong: [
+            { word: "迎", tip: "先写里面内容，再写走之底" },
+            { word: "披", tip: "左边是提手旁，不是木字旁" }
+        ]
+    },
+    "2. 我是什么": {
+        charDetails: [
+            { char: "晒", pinyin: "shài", strokes: 10, radical: "日", groups: ["晒太阳", "晾晒"] },
+            { char: "极", pinyin: "jí", strokes: 7, radical: "木", groups: ["极小", "北极"] },
+            { char: "傍", pinyin: "bàng", strokes: 12, radical: "亻", groups: ["傍晚", "傍边"] },
+            { char: "越", pinyin: "yuè", strokes: 12, radical: "走", groups: ["越过", "越来越好"] },
+            { char: "滴", pinyin: "dī", strokes: 14, radical: "氵", groups: ["水滴", "一滴"] },
+            { char: "溪", pinyin: "xī", strokes: 13, radical: "氵", groups: ["小溪", "溪水"] },
+            { char: "奔", pinyin: "bēn", strokes: 8, radical: "大", groups: ["奔跑", "飞奔"] },
+            { char: "洋", pinyin: "yáng", strokes: 9, radical: "氵", groups: ["海洋", "大洋"] },
+            { char: "坏", pinyin: "huài", strokes: 7, radical: "土", groups: ["坏事", "好坏"] },
+            { char: "淹", pinyin: "yān", strokes: 11, radical: "氵", groups: ["淹没", "淹水"] },
+            { char: "没", pinyin: "mò", strokes: 7, radical: "氵", groups: ["沉没", "没收"] },
+            { char: "冲", pinyin: "chōng", strokes: 6, radical: "冫", groups: ["冲走", "冲刺"] },
+            { char: "毁", pinyin: "huǐ", strokes: 13, radical: "殳", groups: ["毁坏", "烧毁"] },
+            { char: "屋", pinyin: "wū", strokes: 9, radical: "尸", groups: ["房屋", "屋顶"] },
+            { char: "灾", pinyin: "zāi", strokes: 7, radical: "宀", groups: ["灾害", "水灾"] }
+        ],
+        antonyms: [
+            { word: "坏", near: "坏、糟糕", opposite: "好、美好" },
+            { word: "硬", near: "坚硬、牢固", opposite: "软、柔软" }
+        ],
+        idioms: ["滴水成冰", "汪洋大海"],
+        easyWrong: [
+            { word: "越", tip: "走字底，先写走再写戉" },
+            { word: "灾", tip: "上面是宀头，不是穴头" }
+        ]
+    },
+    "3. 植物妈妈有办法": {
+        charDetails: [
+            { char: "植", pinyin: "zhí", strokes: 12, radical: "木", groups: ["植物", "种植"] },
+            { char: "如", pinyin: "rú", strokes: 6, radical: "女", groups: ["如果", "如同"] },
+            { char: "为", pinyin: "wéi", strokes: 4, radical: "丶", groups: ["因为", "以为"] },
+            { char: "旅", pinyin: "lǚ", strokes: 10, radical: "方", groups: ["旅行", "旅游"] },
+            { char: "备", pinyin: "bèi", strokes: 8, radical: "夂", groups: ["准备", "备用"] },
+            { char: "纷", pinyin: "fēn", strokes: 7, radical: "纟", groups: ["纷纷", "纷飞"] },
+            { char: "刺", pinyin: "cì", strokes: 8, radical: "刂", groups: ["刺刀", "鱼刺"] },
+            { char: "底", pinyin: "dǐ", strokes: 8, radical: "广", groups: ["底下", "到底"] },
+            { char: "炸", pinyin: "zhà", strokes: 9, radical: "火", groups: ["炸开", "爆炸"] },
+            { char: "离", pinyin: "lí", strokes: 10, radical: "亠", groups: ["离开", "距离"] },
+            { char: "察", pinyin: "chá", strokes: 14, radical: "宀", groups: ["观察", "警察"] },
+            { char: "识", pinyin: "shí", strokes: 7, radical: "讠", groups: ["认识", "知识"] },
+            { char: "粗", pinyin: "cū", strokes: 11, radical: "米", groups: ["粗细", "粗心"] },
+            { char: "得", pinyin: "dé", strokes: 11, radical: "彳", groups: ["得到", "得分"] }
+        ],
+        antonyms: [
+            { word: "粗", near: "粗大、粗壮", opposite: "细、细致" },
+            { word: "离", near: "离开、分离", opposite: "合、相聚" }
+        ],
+        idioms: ["粗心大意", "四海为家"],
+        easyWrong: [
+            { word: "察", tip: "中间是祭字变形，不要少写笔画" },
+            { word: "刺", tip: "左边是朿，不是束" }
+        ]
+    },
+    "识字1. 场景歌": {
+        charDetails: [
+            { char: "海", pinyin: "hǎi", strokes: 10, radical: "氵", groups: ["大海", "海边"] },
+            { char: "军", pinyin: "jūn", strokes: 6, radical: "冖", groups: ["军队", "军舰"] },
+            { char: "舰", pinyin: "jiàn", strokes: 10, radical: "舟", groups: ["军舰", "舰队"] },
+            { char: "帆", pinyin: "fān", strokes: 6, radical: "巾", groups: ["帆船", "风帆"] },
+            { char: "稻", pinyin: "dào", strokes: 15, radical: "禾", groups: ["水稻", "稻谷"] },
+            { char: "园", pinyin: "yuán", strokes: 7, radical: "囗", groups: ["花园", "公园"] },
+            { char: "翠", pinyin: "cuì", strokes: 14, radical: "羽", groups: ["翠竹", "翠绿"] },
+            { char: "队", pinyin: "duì", strokes: 4, radical: "阝", groups: ["队伍", "排队"] },
+            { char: "铜", pinyin: "tóng", strokes: 11, radical: "钅", groups: ["铜号", "铜钱"] },
+            { char: "号", pinyin: "hào", strokes: 5, radical: "口", groups: ["口号", "号码"] },
+            { char: "领", pinyin: "lǐng", strokes: 11, radical: "页", groups: ["领子", "带领"] },
+            { char: "巾", pinyin: "jīn", strokes: 3, radical: "巾", groups: ["毛巾", "红领巾"] }
+        ],
+        antonyms: [
+            { word: "圆", near: "圆形、圆满", opposite: "方、方正" }
+        ],
+        idioms: ["一帆风顺", "乘风破浪"],
+        easyWrong: [
+            { char: "舰", tip: "左边是舟字旁，不是月字旁" },
+            { char: "翠", tip: "上面是羽字头，不是卒字" }
+        ]
+    },
+    "识字2. 树之歌": {
+        charDetails: [
+            { char: "杨", pinyin: "yáng", strokes: 7, radical: "木", groups: ["杨树", "白杨"] },
+            { char: "壮", pinyin: "zhuàng", strokes: 6, radical: "士", groups: ["壮大", "强壮"] },
+            { char: "桐", pinyin: "tóng", strokes: 10, radical: "木", groups: ["梧桐", "油桐"] },
+            { char: "枫", pinyin: "fēng", strokes: 8, radical: "木", groups: ["枫树", "枫叶"] },
+            { char: "松", pinyin: "sōng", strokes: 8, radical: "木", groups: ["松树", "松果"] },
+            { char: "柏", pinyin: "bǎi", strokes: 9, radical: "木", groups: ["柏树", "松柏"] },
+            { char: "杉", pinyin: "shān", strokes: 7, radical: "木", groups: ["杉树", "水杉"] },
+            { char: "化", pinyin: "huà", strokes: 4, radical: "亻", groups: ["变化", "化石"] },
+            { char: "桂", pinyin: "guì", strokes: 10, radical: "木", groups: ["桂花", "桂树"] }
+        ],
+        antonyms: [
+            { word: "壮", near: "强壮、健壮", opposite: "弱、瘦弱" },
+            { word: "暖", near: "温暖、暖和", opposite: "冷、寒冷" }
+        ],
+        idioms: ["岁寒松柏", "叶落归根"],
+        easyWrong: [
+            { char: "杉", tip: "右边三撇，不是彡" },
+            { char: "壮", tip: "左边是丬，不是爿" }
+        ]
+    },
+    "识字3. 拍手歌": {
+        charDetails: [
+            { char: "世", pinyin: "shì", strokes: 5, radical: "一", groups: ["世界", "世纪"] },
+            { char: "界", pinyin: "jiè", strokes: 9, radical: "田", groups: ["世界", "边界"] },
+            { char: "雀", pinyin: "què", strokes: 11, radical: "隹", groups: ["孔雀", "麻雀"] },
+            { char: "锦", pinyin: "jǐn", strokes: 13, radical: "钅", groups: ["锦鸡", "锦缎"] },
+            { char: "雄", pinyin: "xióng", strokes: 12, radical: "隹", groups: ["雄鹰", "英雄"] },
+            { char: "鹰", pinyin: "yīng", strokes: 18, radical: "鸟", groups: ["老鹰", "雄鹰"] },
+            { char: "翔", pinyin: "xiáng", strokes: 12, radical: "羽", groups: ["飞翔", "滑翔"] },
+            { char: "雁", pinyin: "yàn", strokes: 12, radical: "隹", groups: ["大雁", "雁群"] },
+            { char: "丛", pinyin: "cóng", strokes: 5, radical: "一", groups: ["树丛", "草丛"] },
+            { char: "深", pinyin: "shēn", strokes: 11, radical: "氵", groups: ["深处", "深浅"] },
+            { char: "猛", pinyin: "měng", strokes: 11, radical: "犭", groups: ["猛烈", "猛虎"] },
+            { char: "灵", pinyin: "líng", strokes: 7, radical: "火", groups: ["灵巧", "机灵"] },
+            { char: "休", pinyin: "xiū", strokes: 6, radical: "亻", groups: ["休息", "休想"] }
+        ],
+        antonyms: [
+            { word: "深", near: "深沉、深厚", opposite: "浅、浅显" },
+            { word: "猛", near: "猛烈、凶猛", opposite: "温、温和" }
+        ],
+        idioms: ["鹰击长空", "莺歌燕舞"],
+        easyWrong: [
+            { char: "鹰", tip: "笔画多，注意下面是鸟字" },
+            { char: "休", tip: "左边亻右边木，人靠树休息" }
+        ]
+    },
+    "识字4. 田家四季歌": {
+        charDetails: [
+            { char: "季", pinyin: "jì", strokes: 8, radical: "子", groups: ["四季", "季节"] },
+            { char: "蝴", pinyin: "hú", strokes: 15, radical: "虫", groups: ["蝴蝶", "蝴蝶花"] },
+            { char: "蝶", pinyin: "dié", strokes: 15, radical: "虫", groups: ["蝴蝶", "飞蝶"] },
+            { char: "麦", pinyin: "mài", strokes: 7, radical: "麦", groups: ["麦苗", "小麦"] },
+            { char: "苗", pinyin: "miáo", strokes: 8, radical: "艹", groups: ["麦苗", "树苗"] },
+            { char: "嫩", pinyin: "nèn", strokes: 14, radical: "女", groups: ["嫩绿", "娇嫩"] },
+            { char: "桑", pinyin: "sāng", strokes: 10, radical: "木", groups: ["桑叶", "桑树"] },
+            { char: "肥", pinyin: "féi", strokes: 8, radical: "月", groups: ["肥胖", "化肥"] },
+            { char: "农", pinyin: "nóng", strokes: 6, radical: "冖", groups: ["农民", "农田"] },
+            { char: "归", pinyin: "guī", strokes: 5, radical: "彐", groups: ["归来", "回归"] },
+            { char: "戴", pinyin: "dài", strokes: 17, radical: "戈", groups: ["穿戴", "戴帽"] },
+            { char: "场", pinyin: "cháng", strokes: 6, radical: "土", groups: ["场院", "打场"] },
+            { char: "粒", pinyin: "lì", strokes: 11, radical: "米", groups: ["一粒", "颗粒"] },
+            { char: "虽", pinyin: "suī", strokes: 9, radical: "虫", groups: ["虽然", "虽说"] },
+            { char: "苦", pinyin: "kǔ", strokes: 8, radical: "艹", groups: ["辛苦", "苦瓜"] }
+        ],
+        antonyms: [
+            { word: "嫩", near: "娇嫩、柔嫩", opposite: "老、粗老" },
+            { word: "苦", near: "辛苦、艰苦", opposite: "甜、甘甜" },
+            { word: "忙", near: "忙碌、繁忙", opposite: "闲、清闲" }
+        ],
+        idioms: ["春华秋实", "辛勤劳动"],
+        easyWrong: [
+            { char: "戴", tip: "笔画多，注意左下是异字变形" },
+            { char: "粒", tip: "左边米字旁，不是立字" }
+        ]
+    },
+    "4. 曹冲称象": {
+        charDetails: [
+            { char: "柱", pinyin: "zhù", strokes: 9, radical: "木", groups: ["柱子", "石柱"] },
+            { char: "议", pinyin: "yì", strokes: 5, radical: "讠", groups: ["议论", "会议"] },
+            { char: "论", pinyin: "lùn", strokes: 6, radical: "讠", groups: ["议论", "讨论"] },
+            { char: "重", pinyin: "zhòng", strokes: 9, radical: "里", groups: ["重量", "重要"] },
+            { char: "秤", pinyin: "chèng", strokes: 10, radical: "禾", groups: ["秤杆", "过秤"] },
+            { char: "砍", pinyin: "kǎn", strokes: 9, radical: "石", groups: ["砍树", "砍刀"] },
+            { char: "线", pinyin: "xiàn", strokes: 8, radical: "纟", groups: ["毛线", "线条"] },
+            { char: "止", pinyin: "zhǐ", strokes: 4, radical: "止", groups: ["停止", "止步"] },
+            { char: "量", pinyin: "liàng", strokes: 12, radical: "里", groups: ["重量", "测量"] }
+        ],
+        antonyms: [
+            { word: "重", near: "沉重、重要", opposite: "轻、轻微" },
+            { word: "沉", near: "下沉、沉重", opposite: "浮、漂浮" }
+        ],
+        idioms: ["绞尽脑汁", "灵机一动"],
+        easyWrong: [
+            { char: "秤", tip: "左边禾字旁，不是木字旁" },
+            { char: "论", tip: "右边是仑，不是仓" }
+        ]
+    },
+    "5. 玲玲的画": {
+        charDetails: [
+            { char: "详", pinyin: "xiáng", strokes: 8, radical: "讠", groups: ["详细", "详谈"] },
+            { char: "幅", pinyin: "fú", strokes: 12, radical: "巾", groups: ["一幅画", "篇幅"] },
+            { char: "评", pinyin: "píng", strokes: 7, radical: "讠", groups: ["评比", "评分"] },
+            { char: "奖", pinyin: "jiǎng", strokes: 9, radical: "大", groups: ["奖状", "获奖"] },
+            { char: "候", pinyin: "hòu", strokes: 10, radical: "亻", groups: ["时候", "等候"] },
+            { char: "报", pinyin: "bào", strokes: 7, radical: "扌", groups: ["报纸", "报告"] },
+            { char: "另", pinyin: "lìng", strokes: 5, radical: "口", groups: ["另外", "另有"] },
+            { char: "及", pinyin: "jí", strokes: 3, radical: "丿", groups: ["及时", "及格"] },
+            { char: "懒", pinyin: "lǎn", strokes: 16, radical: "忄", groups: ["懒惰", "偷懒"] },
+            { char: "并", pinyin: "bìng", strokes: 6, radical: "丷", groups: ["并且", "合并"] }
+        ],
+        antonyms: [
+            { word: "懒", near: "懒惰、偷懒", opposite: "勤、勤奋" },
+            { word: "好", near: "美好、良好", opposite: "坏、糟糕" }
+        ],
+        idioms: ["动脑筋", "画龙点睛"],
+        easyWrong: [
+            { char: "幅", tip: "左边巾字旁，不是衣字旁" },
+            { char: "奖", tip: "下面是大字，不是犬字" }
+        ]
+    },
+    "6. 一封信": {
+        charDetails: [
+            { char: "封", pinyin: "fēng", strokes: 9, radical: "寸", groups: ["一封信", "封面"] },
+            { char: "信", pinyin: "xìn", strokes: 9, radical: "亻", groups: ["写信", "信心"] },
+            { char: "今", pinyin: "jīn", strokes: 4, radical: "人", groups: ["今天", "今年"] },
+            { char: "支", pinyin: "zhī", strokes: 4, radical: "支", groups: ["一支笔", "支撑"] },
+            { char: "圆", pinyin: "yuán", strokes: 10, radical: "囗", groups: ["圆形", "圆珠笔"] },
+            { char: "珠", pinyin: "zhū", strokes: 10, radical: "王", groups: ["珠子", "珍珠"] },
+            { char: "笔", pinyin: "bǐ", strokes: 10, radical: "竹", groups: ["铅笔", "毛笔"] },
+            { char: "灯", pinyin: "dēng", strokes: 6, radical: "火", groups: ["电灯", "台灯"] },
+            { char: "削", pinyin: "xiāo", strokes: 9, radical: "刂", groups: ["削铅笔", "削皮"] },
+            { char: "锅", pinyin: "guō", strokes: 12, radical: "钅", groups: ["锅子", "铁锅"] },
+            { char: "朝", pinyin: "cháo", strokes: 12, radical: "月", groups: ["朝向", "朝代"] },
+            { char: "刮", pinyin: "guā", strokes: 8, radical: "刂", groups: ["刮风", "刮脸"] },
+            { char: "胡", pinyin: "hú", strokes: 9, radical: "月", groups: ["胡子", "胡说"] },
+            { char: "修", pinyin: "xiū", strokes: 9, radical: "亻", groups: ["修理", "修改"] }
+        ],
+        antonyms: [
+            { word: "朝", near: "朝阳、朝前", opposite: "夕、傍晚" },
+            { word: "冷", near: "寒冷、冰凉", opposite: "热、温暖" }
+        ],
+        idioms: ["家书抵万金", "鸿雁传书"],
+        easyWrong: [
+            { char: "封", tip: "右边是寸字，不是才字" },
+            { char: "削", tip: "右边是肖字，不是月字" }
+        ]
+    },
+    "7. 妈妈睡了": {
+        charDetails: [
+            { char: "哄", pinyin: "hǒng", strokes: 9, radical: "口", groups: ["哄睡", "哄人"] },
+            { char: "先", pinyin: "xiān", strokes: 6, radical: "儿", groups: ["首先", "先生"] },
+            { char: "闭", pinyin: "bì", strokes: 6, radical: "门", groups: ["闭上", "关闭"] },
+            { char: "紧", pinyin: "jǐn", strokes: 10, radical: "糸", groups: ["紧紧", "要紧"] },
+            { char: "润", pinyin: "rùn", strokes: 10, radical: "氵", groups: ["湿润", "红润"] },
+            { char: "等", pinyin: "děng", strokes: 12, radical: "竹", groups: ["等待", "相等"] },
+            { char: "吸", pinyin: "xī", strokes: 6, radical: "口", groups: ["呼吸", "吸气"] },
+            { char: "发", pinyin: "fà", strokes: 5, radical: "又", groups: ["头发", "发现"] },
+            { char: "粘", pinyin: "zhān", strokes: 11, radical: "米", groups: ["粘贴", "粘住"] },
+            { char: "额", pinyin: "é", strokes: 12, radical: "页", groups: ["额头", "额外"] },
+            { char: "乏", pinyin: "fá", strokes: 4, radical: "丿", groups: ["乏困", "缺乏"] },
+            { char: "沙", pinyin: "shā", strokes: 7, radical: "氵", groups: ["沙子", "沙沙声"] }
+        ],
+        antonyms: [
+            { word: "闭", near: "关闭、合上", opposite: "开、张开" },
+            { word: "紧", near: "紧密、紧贴", opposite: "松、松弛" }
+        ],
+        idioms: ["慈母手中线", "嘘寒问暖"],
+        easyWrong: [
+            { char: "哄", tip: "左边口字旁，不是言字旁" },
+            { char: "粘", tip: "左边米字旁，不是黍字旁" }
+        ]
+    },
+    "8. 古诗二首": {
+        charDetails: [
+            { char: "楼", pinyin: "lóu", strokes: 13, radical: "木", groups: ["楼房", "城楼"] },
+            { char: "依", pinyin: "yī", strokes: 8, radical: "亻", groups: ["依靠", "依山"] },
+            { char: "尽", pinyin: "jìn", strokes: 6, radical: "尸", groups: ["尽力", "尽头"] },
+            { char: "欲", pinyin: "yù", strokes: 11, radical: "欠", groups: ["欲望", "想要"] },
+            { char: "穷", pinyin: "qióng", strokes: 7, radical: "穴", groups: ["穷尽", "贫穷"] },
+            { char: "层", pinyin: "céng", strokes: 7, radical: "尸", groups: ["一层", "层次"] },
+            { char: "瀑", pinyin: "pù", strokes: 18, radical: "氵", groups: ["瀑布", "飞瀑"] },
+            { char: "布", pinyin: "bù", strokes: 5, radical: "巾", groups: ["瀑布", "布匹"] },
+            { char: "炉", pinyin: "lú", strokes: 8, radical: "火", groups: ["火炉", "香炉"] },
+            { char: "烟", pinyin: "yān", strokes: 10, radical: "火", groups: ["炊烟", "烟囱"] },
+            { char: "遥", pinyin: "yáo", strokes: 13, radical: "辶", groups: ["遥远", "遥望"] },
+            { char: "川", pinyin: "chuān", strokes: 3, radical: "川", groups: ["山川", "河流"] }
+        ],
+        antonyms: [
+            { word: "穷", near: "穷尽、到底", opposite: "富、丰富" },
+            { word: "高", near: "高大、高远", opposite: "低、低矮" }
+        ],
+        idioms: ["更上一层楼", "飞流直下"],
+        easyWrong: [
+            { char: "瀑", tip: "笔画多，右边是暴字" },
+            { char: "遥", tip: "走之底，先写里面的摇" }
+        ]
+    },
+    "9. 黄山奇石": {
+        charDetails: [
+            { char: "闻", pinyin: "wén", strokes: 9, radical: "门", groups: ["闻名", "新闻"] },
+            { char: "名", pinyin: "míng", strokes: 6, radical: "口", groups: ["名字", "有名"] },
+            { char: "景", pinyin: "jǐng", strokes: 12, radical: "日", groups: ["景色", "风景"] },
+            { char: "区", pinyin: "qū", strokes: 4, radical: "匚", groups: ["景区", "地区"] },
+            { char: "省", pinyin: "shěng", strokes: 9, radical: "目", groups: ["省份", "省事"] },
+            { char: "部", pinyin: "bù", strokes: 10, radical: "阝", groups: ["部分", "南部"] },
+            { char: "秀", pinyin: "xiù", strokes: 7, radical: "禾", groups: ["秀丽", "优秀"] },
+            { char: "尤", pinyin: "yóu", strokes: 4, radical: "尢", groups: ["尤其", "尤为"] },
+            { char: "其", pinyin: "qí", strokes: 8, radical: "八", groups: ["其中", "其他"] },
+            { char: "仙", pinyin: "xiān", strokes: 5, radical: "亻", groups: ["仙人", "神仙"] },
+            { char: "巨", pinyin: "jù", strokes: 4, radical: "工", groups: ["巨大", "巨人"] },
+            { char: "位", pinyin: "wèi", strokes: 7, radical: "亻", groups: ["位置", "座位"] },
+            { char: "都", pinyin: "dōu", strokes: 10, radical: "阝", groups: ["都是", "首都"] }
+        ],
+        antonyms: [
+            { word: "巨", near: "巨大、巨型", opposite: "小、微小" },
+            { word: "奇", near: "奇特、奇异", opposite: "平、平凡" }
+        ],
+        idioms: ["闻名中外", "奇形怪状"],
+        easyWrong: [
+            { char: "省", tip: "上面少一目，不是目字" },
+            { char: "巨", tip: "注意笔顺，先写横再写竖折" }
+        ]
+    },
+    "10. 日月潭": {
+        charDetails: [
+            { char: "湾", pinyin: "wān", strokes: 12, radical: "氵", groups: ["海湾", "台湾"] },
+            { char: "名", pinyin: "míng", strokes: 6, radical: "口", groups: ["名胜", "名字"] },
+            { char: "胜", pinyin: "shèng", strokes: 9, radical: "月", groups: ["名胜", "胜利"] },
+            { char: "迹", pinyin: "jì", strokes: 9, radical: "辶", groups: ["古迹", "事迹"] },
+            { char: "央", pinyin: "yāng", strokes: 5, radical: "大", groups: ["中央", "央求"] },
+            { char: "丽", pinyin: "lì", strokes: 7, radical: "一", groups: ["美丽", "秀丽"] },
+            { char: "华", pinyin: "huá", strokes: 6, radical: "十", groups: ["中华", "华丽"] },
+            { char: "展", pinyin: "zhǎn", strokes: 10, radical: "尸", groups: ["展现", "展开"] },
+            { char: "现", pinyin: "xiàn", strokes: 8, radical: "王", groups: ["展现", "现在"] },
+            { char: "披", pinyin: "pī", strokes: 8, radical: "扌", groups: ["披上", "披风"] },
+            { char: "纱", pinyin: "shā", strokes: 7, radical: "纟", groups: ["薄纱", "纱巾"] },
+            { char: "童", pinyin: "tóng", strokes: 12, radical: "立", groups: ["童话", "儿童"] }
+        ],
+        antonyms: [
+            { word: "胜", near: "名胜、胜利", opposite: "败、失败" },
+            { word: "美", near: "美丽、美好", opposite: "丑、丑陋" }
+        ],
+        idioms: ["湖光山色", "风景如画"],
+        easyWrong: [
+            { char: "湾", tip: "左边氵，右边弯" },
+            { char: "迹", tip: "走之底，先写亦再写辶" }
+        ]
+    },
+    "11. 葡萄沟": {
+        charDetails: [
+            { char: "沟", pinyin: "gōu", strokes: 7, radical: "氵", groups: ["水沟", "山沟"] },
+            { char: "产", pinyin: "chǎn", strokes: 6, radical: "亠", groups: ["出产", "生产"] },
+            { char: "份", pinyin: "fèn", strokes: 6, radical: "亻", groups: ["月份", "一份"] },
+            { char: "枝", pinyin: "zhī", strokes: 8, radical: "木", groups: ["树枝", "枝叶"] },
+            { char: "搭", pinyin: "dā", strokes: 12, radical: "扌", groups: ["搭建", "搭棚"] },
+            { char: "淡", pinyin: "dàn", strokes: 11, radical: "氵", groups: ["淡绿", "清淡"] },
+            { char: "好", pinyin: "hǎo", strokes: 6, radical: "女", groups: ["好看", "好处"] },
+            { char: "收", pinyin: "shōu", strokes: 6, radical: "攵", groups: ["收获", "收成"] },
+            { char: "城", pinyin: "chéng", strokes: 9, radical: "土", groups: ["城市", "长城"] },
+            { char: "市", pinyin: "shì", strokes: 5, radical: "亠", groups: ["城市", "市场"] },
+            { char: "留", pinyin: "liú", strokes: 10, radical: "田", groups: ["留下", "保留"] },
+            { char: "钉", pinyin: "dīng", strokes: 7, radical: "钅", groups: ["钉子", "铁钉"] },
+            { char: "利", pinyin: "lì", strokes: 7, radical: "刂", groups: ["利用", "锋利"] },
+            { char: "分", pinyin: "fēn", strokes: 4, radical: "八", groups: ["分开", "十分"] },
+            { char: "味", pinyin: "wèi", strokes: 8, radical: "口", groups: ["味道", "香味"] }
+        ],
+        antonyms: [
+            { word: "淡", near: "清淡、淡色", opposite: "浓、浓郁" },
+            { word: "收", near: "收获、收集", opposite: "放、释放" }
+        ],
+        idioms: ["五光十色", "硕果累累"],
+        easyWrong: [
+            { char: "搭", tip: "右边是答字，不是塔字少一笔" },
+            { char: "份", tip: "左边亻，不是分字" }
+        ]
+    }
+};
+
+// ===== 写话写作提示 =====
+const WRITING_PROMPTS = [
+    { id: "w1", title: "看图写话：课间活动", desc: "仔细看图，用几句话写一写课间同学们在做什么。注意写清时间、地点、人物、事件。", tip: "句式参考：下课后，同学们在___（地点）___（做什么）。有的___，有的___，还有的___。大家玩得真开心！", icon: "🏃" },
+    { id: "w2", title: "看图写话：春天来了", desc: "观察春天的图片，写一段话描述春天的景色。", tip: "句式参考：春天来了，___（哪里）的___怎么样了。小草___，花朵___，小鸟___。", icon: "🌸" },
+    { id: "w3", title: "日记：今天的一件事", desc: "写一篇简短日记，记录今天发生的一件有趣的事。", tip: "格式：X月X日 星期X 天气X\\n今天，我___。我觉得___。", icon: "📔" },
+    { id: "w4", title: "看图写话：帮妈妈做事", desc: "看图写一段话，写一写小朋友帮妈妈做家务的情景。", tip: "句式参考：___（什么时候），___（谁）在___（哪里）帮妈妈___（做什么）。妈妈___，孩子___。", icon: "🤲" },
+    { id: "w5", title: "日记：我的好朋友", desc: "写一篇日记，介绍你的好朋友。", tip: "格式：X月X日 星期X 天气X\\n我的好朋友是___。他/她长得___，喜欢___。我们经常一起___。", icon: "👫" },
+    { id: "w6", title: "看图写话：动物乐园", desc: "观察图片，写一写动物乐园里发生了什么。", tip: "句式参考：在___（哪里），有___（哪些动物）。它们在___（做什么）。___（怎样）真___！", icon: "🐰" }
+];
+
+// ===== 标点符号练习 =====
+const PUNCTUATION_EXERCISES = [
+    { id: "p1", sentence: "今天天气真好啊", answer: "今天天气真好啊！", options: ["。", "！", "？"], explain: "表示感叹语气，用感叹号。" },
+    { id: "p2", sentence: "你叫什么名字", answer: "你叫什么名字？", options: ["。", "！", "？"], explain: "表示疑问语气，用问号。" },
+    { id: "p3", sentence: "妈妈说快过来吃饭", answer: "妈妈说：\\u201C快过来吃饭。\\u201D", options: ["妈妈说：快过来吃饭。", "妈妈说，\\u201C快过来吃饭。\\u201D", "妈妈说：\\u201C快过来吃饭。\\u201D"], explain: "引用别人说的话，要用冒号和引号。" },
+    { id: "p4", sentence: "小红小明和小刚一起去公园", answer: "小红、小明和小刚一起去公园。", options: ["小红、小明和小刚一起去公园。", "小红小明和小刚一起去公园。", "小红，小明和小刚一起去公园。"], explain: "并列的词语之间用顿号。" },
+    { id: "p5", sentence: "花园里有红花黄花和白花", answer: "花园里有红花、黄花和白花。", options: ["花园里有红花、黄花和白花。", "花园里有红花黄花和白花。", "花园里有红花，黄花和白花。"], explain: "并列词语之间用顿号，句末用句号。" }
+];
+
 // ===== 每日学习计划模板 =====
 const PLAN_TEMPLATES = {
     weekday: [
