@@ -268,9 +268,25 @@ const UI = {
 
 // ===== 模块渲染器 =====
 const Modules = {
-    // ===== 辅助方法：课文原文加注音（使用本地拼音字典）=====
-    renderTextWithPinyin(text) {
+    // ===== 辅助方法：课文原文加注音（使用按课文预生成的上下文感知拼音）=====
+    renderTextWithPinyin(text, lessonTitle) {
         if (!text) return '';
+        // 优先使用按课文预生成的拼音（正确处理多音字）
+        if (lessonTitle && typeof LESSON_PINYIN !== 'undefined' && LESSON_PINYIN[lessonTitle]) {
+            const pairs = LESSON_PINYIN[lessonTitle];
+            let html = '';
+            for (const [ch, py] of pairs) {
+                if (ch === '\n\n') {
+                    html += '</p><p class="lesson-para">';
+                } else if (/[\u4e00-\u9fff]/.test(ch)) {
+                    html += '<ruby>' + ch + '<rt>' + py + '</rt></ruby>';
+                } else {
+                    html += ch;
+                }
+            }
+            return '<p class="lesson-para">' + html + '</p>';
+        }
+        // 回退：逐字查字典（无法处理多音字）
         const pm = (typeof PINYIN_MAP !== 'undefined') ? PINYIN_MAP : {};
         const paragraphs = text.split('\n\n');
         return paragraphs.map(para => {
@@ -702,7 +718,7 @@ const Modules = {
         const textHtml = lessonText ? `
             <div class="lego-panel" style="margin-bottom:16px;">
                 <h3 style="font-size:16px;font-weight:bold;color:#3A3A3A;margin-bottom:12px;">📖 课文原文</h3>
-                <div class="lesson-text-content">${Modules.renderTextWithPinyin(lessonText)}</div>
+                <div class="lesson-text-content">${Modules.renderTextWithPinyin(lessonText, currentLesson.title)}</div>
             </div>
         ` : '';
 

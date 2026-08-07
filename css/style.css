@@ -2393,9 +2393,9 @@ body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center;
     background: #FFFDE7;
     border: 2px solid #FCD116;
     border-radius: 10px;
-    font-size: 15px;
+    font-size: 16px;
     color: #3A3A3A;
-    line-height: 1.6;
+    line-height: 2.4;
     max-height: 380px;
     overflow-y: auto;
 }
@@ -2412,14 +2412,17 @@ body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center;
 .lesson-text-content ruby {
     ruby-position: over;
     ruby-align: center;
+    margin-right: 4px;
+    letter-spacing: 2px;
 }
 
 .lesson-text-content rt {
-    font-size: 10px;
-    color: #999;
-    font-family: 'Nunito', sans-serif;
-    line-height: 1;
-    padding-bottom: 1px;
+    font-size: 11px;
+    color: #666;
+    font-family: 'Nunito', 'Microsoft YaHei', sans-serif;
+    line-height: 1.2;
+    padding-bottom: 2px;
+    font-weight: 600;
 }
 
 /* 笔顺展示 */
