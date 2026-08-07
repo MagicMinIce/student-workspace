@@ -1562,28 +1562,77 @@ const Modules = {
         const file = event.target.files[0];
         if (!file) return;
 
-        const maxSize = type === 'video' ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
+        const maxSize = type === 'video' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
         if (file.size > maxSize) {
-            UI.toast(type === 'video' ? '视频不能超过20MB' : '照片不能超过5MB', 'error');
+            UI.toast(type === 'video' ? '视频不能超过10MB' : '照片不能超过5MB', 'error');
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this._checkinMedia = { data: e.target.result, type: type };
-            const preview = document.getElementById('checkinPhotoPreview');
-            const area = document.getElementById('checkinPhotoArea');
-            if (area) area.style.display = 'none';
-            if (preview) {
-                preview.style.display = 'block';
-                if (type === 'video') {
-                    preview.innerHTML = `<video src="${e.target.result}" controls style="max-width:100%;max-height:200px;border-radius:10px;"></video>`;
-                } else {
-                    preview.innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:200px;border-radius:10px;object-fit:cover;">`;
+        if (type === 'photo') {
+            // 压缩图片，减少同步数据量
+            this.compressImage(file, 640, 0.7).then(compressed => {
+                this._checkinMedia = { data: compressed, type: 'photo' };
+                const preview = document.getElementById('checkinPhotoPreview');
+                const area = document.getElementById('checkinPhotoArea');
+                if (area) area.style.display = 'none';
+                if (preview) {
+                    preview.style.display = 'block';
+                    preview.innerHTML = `<img src="${compressed}" style="max-width:100%;max-height:200px;border-radius:10px;object-fit:cover;">`;
                 }
-            }
-        };
-        reader.readAsDataURL(file);
+            }).catch(err => {
+                console.error('Image compress error:', err);
+                UI.toast('图片处理失败，请重试', 'error');
+            });
+        } else {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this._checkinMedia = { data: e.target.result, type: type };
+                const preview = document.getElementById('checkinPhotoPreview');
+                const area = document.getElementById('checkinPhotoArea');
+                if (area) area.style.display = 'none';
+                if (preview) {
+                    preview.style.display = 'block';
+                    if (type === 'video') {
+                        preview.innerHTML = `<video src="${e.target.result}" controls style="max-width:100%;max-height:200px;border-radius:10px;"></video>`;
+                    } else {
+                        preview.innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:200px;border-radius:10px;object-fit:cover;">`;
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    },
+
+    // 压缩图片：缩小尺寸 + JPEG压缩
+    compressImage(file, maxSize, quality) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width, h = img.height;
+                    if (w > maxSize || h > maxSize) {
+                        if (w > h) {
+                            h = Math.round(h * maxSize / w);
+                            w = maxSize;
+                        } else {
+                            w = Math.round(w * maxSize / h);
+                            h = maxSize;
+                        }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
     },
 
     submitCheckin() {
@@ -2379,7 +2428,19 @@ const App = {
 
     // 同步设置（未连接时）
     showSyncSetup() {
+        const firebaseReady = (typeof window.FIREBASE_CONFIG !== 'undefined' && window.FIREBASE_CONFIG.apiKey && window.FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY');
+        const configWarning = firebaseReady ? '' : `
+            <div style="background:#FFF3E0;border:2px solid #FF9800;border-radius:12px;padding:12px;margin-bottom:12px;">
+                <p style="font-size:13px;color:#E65100;line-height:1.6;">
+                    \u26A0\uFE0F \u9996\u6B21\u4F7F\u7528\u9700\u914D\u7F6E Firebase\uFF1A<br>
+                    1. \u6253\u5F00 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">js/firebase-config.js</code><br>
+                    2. \u6309\u6587\u4EF6\u5185\u8BF4\u660E\u586B\u5165 Firebase \u914D\u7F6E<br>
+                    3. \u5237\u65B0\u9875\u9762\u5373\u53EF\u4F7F\u7528
+                </p>
+            </div>
+        `;
         UI.modal('\uD83C\uDF10 云端同步', `
+            ${configWarning}
             <div style="margin-bottom:16px;">
                 <div style="background:#E8F5E9;border:2px solid #00852B;border-radius:12px;padding:14px;margin-bottom:16px;">
                     <h4 style="font-size:15px;font-weight:bold;color:#2E7D32;margin-bottom:6px;">\u26A1 自动实时同步</h4>
@@ -2428,7 +2489,7 @@ const App = {
             <div style="background:#E8F5E9;border:2px solid #00852B;border-radius:12px;padding:14px;margin-bottom:16px;text-align:center;">
                 <div style="font-size:40px;margin-bottom:8px;">\u2705</div>
                 <p style="font-size:14px;color:#2E7D32;font-weight:bold;">\u4E91\u7AEF\u540C\u6B65\u5DF2\u5F00\u542F</p>
-                <p style="font-size:12px;color:#666;margin-top:4px;">\u6570\u636E\u6BCF5\u79D2\u81EA\u52A8\u540C\u6B65\uFF0C\u672C\u5730\u66F4\u6539\u540E1\u79D2\u81EA\u52A8\u4E0A\u4F20</p>
+                <p style="font-size:12px;color:#666;margin-top:4px;">\u6570\u636E\u5B9E\u65F6\u540C\u6B65\uFF0C\u672C\u5730\u66F4\u6539\u540E1\u79D2\u81EA\u52A8\u4E0A\u4F20</p>
             </div>
 
             <div style="margin-bottom:16px;">

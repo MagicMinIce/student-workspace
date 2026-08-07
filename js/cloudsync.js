@@ -1,12 +1,18 @@
 /**
- * 云端同步模块 - 多设备自动实时同步
- * 使用 jsonblob.com 免费 JSON 云存储 API
- * 无需注册账号，无需配置，开箱即用
+ * 云端同步模块 - 多设备实时同步
+ * 使用 Firebase Realtime Database
+ * 需要 firebase-config.js 配置
+ *
+ * 优势：
+ * - 真正的实时同步（无需轮询，数据变化即时推送）
+ * - 离线缓存（断网可用，联网自动同步）
+ * - Google 维护，稳定可靠
+ * - 免费额度充足（1GB存储 + 每月10GB流量）
  */
 const CloudSync = {
-    API_BASE: 'https://jsonblob.com/api/jsonBlob',
-    blobId: null,
-    pollTimer: null,
+    db: null,
+    roomId: null,
+    listeningRef: null,
     pushTimer: null,
     isPushing: false,
     isPulling: false,
@@ -14,13 +20,17 @@ const CloudSync = {
     lastCloudTimestamp: 0,
     hasUnsyncedChanges: false,
     lastError: null,
+    isInitialized: false,
+
+    // 兼容 app.js 中对 blobId 的引用
+    get blobId() { return this.roomId; },
 
     // ===== 初始化 =====
     init() {
         // 从 localStorage 加载同步设置
         try {
             const settings = JSON.parse(localStorage.getItem('mcCloudSync') || '{}');
-            this.blobId = settings.blobId || null;
+            this.roomId = settings.blobId || settings.roomId || null;
             this.enabled = settings.enabled || false;
             this.lastCloudTimestamp = settings.lastCloudTimestamp || 0;
         } catch (e) {
@@ -30,9 +40,8 @@ const CloudSync = {
         // 检查 URL hash 是否包含同步码
         const hash = window.location.hash;
         if (hash.startsWith('#sync=')) {
-            const code = hash.substring(6).trim();
-            if (code && code.length > 10 && code !== this.blobId) {
-                // 自动加入同步
+            const code = hash.substring(6).trim().toUpperCase();
+            if (code && code.length >= 4 && code !== this.roomId) {
                 setTimeout(() => {
                     this.join(code).catch(err => {
                         console.error('Auto-join failed:', err);
@@ -41,70 +50,100 @@ const CloudSync = {
             }
         }
 
-        // 如果已启用，开始轮询
-        if (this.enabled && this.blobId) {
-            this.startPolling();
-            // 延迟1秒后首次拉取
-            setTimeout(() => this.pull(), 1500);
+        // 如果已启用，初始化 Firebase 并开始监听
+        if (this.enabled && this.roomId) {
+            this.initFirebase().then(ok => {
+                if (ok) this.startListening();
+            });
         }
+    },
+
+    // ===== 初始化 Firebase =====
+    async initFirebase() {
+        if (this.isInitialized) return true;
+
+        if (typeof firebase === 'undefined') {
+            this.lastError = 'Firebase SDK 未加载';
+            this.updateStatus('error');
+            return false;
+        }
+
+        if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey || window.FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') {
+            this.lastError = 'Firebase 未配置';
+            this.updateStatus('error');
+            return false;
+        }
+
+        try {
+            firebase.initializeApp(window.FIREBASE_CONFIG);
+            this.db = firebase.database();
+            this.isInitialized = true;
+            return true;
+        } catch (e) {
+            // 如果已经初始化过，直接获取实例
+            if (e.code === 'app/duplicate-app') {
+                this.db = firebase.database();
+                this.isInitialized = true;
+                return true;
+            }
+            console.error('Firebase init error:', e);
+            this.lastError = e.message;
+            this.updateStatus('error');
+            return false;
+        }
+    },
+
+    // ===== 生成6位同步码 =====
+    generateRoomId() {
+        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+            code += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return code;
     },
 
     // ===== 创建新的云端同步 =====
     async create() {
+        if (!(await this.initFirebase())) {
+            throw new Error(this.lastError || 'Firebase 初始化失败');
+        }
+
+        const roomId = this.generateRoomId();
+
         const payload = {
-            data: Store.data,
+            data: this.stripLargeMedia(Store.data),
             timestamp: Date.now(),
             device: this.getDeviceId()
         };
 
-        const res = await fetch(this.API_BASE, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        await this.db.ref('workspaces/' + roomId).set(payload);
 
-        if (!res.ok) throw new Error('创建云端同步失败 (HTTP ' + res.status + ')');
-
-        // 从 Location 头获取 blob ID
-        let blobId = null;
-        const location = res.headers.get('Location');
-        if (location) {
-            blobId = location.split('/').pop();
-        }
-
-        // 备用：从响应体获取
-        if (!blobId) {
-            try {
-                const body = await res.json();
-                blobId = body._id || body.id || null;
-            } catch (e) {}
-        }
-
-        if (!blobId) throw new Error('无法获取同步ID');
-
-        this.blobId = blobId;
+        this.roomId = roomId;
         this.enabled = true;
         this.lastCloudTimestamp = payload.timestamp;
         this.hasUnsyncedChanges = false;
         this.saveSettings();
         this.updateUrlHash();
-        this.startPolling();
+        this.startListening();
         this.updateStatus('synced');
 
-        return blobId;
+        return roomId;
     },
 
     // ===== 加入已有的云端同步 =====
     async join(code) {
-        code = code.trim();
+        code = code.trim().toUpperCase();
         if (!code) throw new Error('请输入同步码');
 
-        // 尝试从云端拉取数据
-        const res = await fetch(this.API_BASE + '/' + code);
-        if (!res.ok) throw new Error('同步码无效或数据不存在');
+        if (!(await this.initFirebase())) {
+            throw new Error(this.lastError || 'Firebase 初始化失败');
+        }
 
-        const payload = await res.json();
-        if (!payload || !payload.data) throw new Error('云端数据格式错误');
+        const snapshot = await this.db.ref('workspaces/' + code).once('value');
+        const payload = snapshot.val();
+
+        if (!payload || !payload.data) throw new Error('同步码无效或数据不存在');
 
         // 合并云端数据到本地
         this.isPulling = true;
@@ -116,16 +155,15 @@ const CloudSync = {
         this.lastCloudTimestamp = payload.timestamp || 0;
         this.isPulling = false;
 
-        // 更新 UI
         UI.updateTopbar();
         App.render();
 
-        this.blobId = code;
+        this.roomId = code;
         this.enabled = true;
         this.hasUnsyncedChanges = false;
         this.saveSettings();
         this.updateUrlHash();
-        this.startPolling();
+        this.startListening();
         this.updateStatus('synced');
 
         return true;
@@ -133,33 +171,25 @@ const CloudSync = {
 
     // ===== 推送本地数据到云端 =====
     async push() {
-        if (!this.enabled || !this.blobId || this.isPushing || this.isPulling) return;
+        if (!this.enabled || !this.roomId || this.isPushing || this.isPulling || !this.db) return;
 
         this.isPushing = true;
         this.updateStatus('syncing');
 
         try {
             const payload = {
-                data: Store.data,
+                data: this.stripLargeMedia(Store.data),
                 timestamp: Date.now(),
                 device: this.getDeviceId()
             };
 
-            const res = await fetch(this.API_BASE + '/' + this.blobId, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            await this.db.ref('workspaces/' + this.roomId).set(payload);
 
-            if (res.ok) {
-                this.lastCloudTimestamp = payload.timestamp;
-                this.hasUnsyncedChanges = false;
-                this.saveSettings();
-                this.updateStatus('synced');
-                this.lastError = null;
-            } else {
-                throw new Error('推送失败 (HTTP ' + res.status + ')');
-            }
+            this.lastCloudTimestamp = payload.timestamp;
+            this.hasUnsyncedChanges = false;
+            this.saveSettings();
+            this.updateStatus('synced');
+            this.lastError = null;
         } catch (e) {
             console.error('CloudSync push error:', e);
             this.lastError = e.message;
@@ -169,55 +199,54 @@ const CloudSync = {
         this.isPushing = false;
     },
 
-    // ===== 从云端拉取数据 =====
-    async pull(force) {
-        if (!this.enabled || !this.blobId || this.isPulling) return;
-
-        // 如果有未同步的本地更改，先推送而不是拉取
-        if (this.hasUnsyncedChanges && !force) {
-            this.push();
-            return;
+    // ===== 实时监听云端数据变化 =====
+    startListening() {
+        if (this.listeningRef) {
+            this.listeningRef.off();
         }
 
-        this.isPulling = true;
+        this.listeningRef = this.db.ref('workspaces/' + this.roomId);
 
-        try {
-            const res = await fetch(this.API_BASE + '/' + this.blobId, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            });
+        this.listeningRef.on('value', (snapshot) => {
+            if (this.isPushing) return;
 
-            if (res.ok) {
-                const payload = await res.json();
-                if (payload && payload.data) {
-                    const cloudTime = payload.timestamp || 0;
-                    if (force || cloudTime > this.lastCloudTimestamp) {
-                        // 云端数据更新，更新本地
-                        Store.data = Object.assign(
-                            JSON.parse(JSON.stringify(Store.defaultData)),
-                            payload.data
-                        );
-                        Store.save();
-                        this.lastCloudTimestamp = cloudTime;
-                        this.hasUnsyncedChanges = false;
-                        this.saveSettings();
-                        UI.updateTopbar();
-                        App.render();
-                        this.updateStatus('synced');
-                        this.lastError = null;
-                    }
+            const payload = snapshot.val();
+            if (payload && payload.data) {
+                const cloudTime = payload.timestamp || 0;
+                if (cloudTime > this.lastCloudTimestamp) {
+                    // 云端数据更新，更新本地
+                    this.isPulling = true;
+                    Store.data = Object.assign(
+                        JSON.parse(JSON.stringify(Store.defaultData)),
+                        payload.data
+                    );
+                    Store.save();
+                    this.lastCloudTimestamp = cloudTime;
+                    this.hasUnsyncedChanges = false;
+                    this.saveSettings();
+                    UI.updateTopbar();
+                    App.render();
+                    this.updateStatus('synced');
+                    this.lastError = null;
+                    this.isPulling = false;
                 }
-            } else if (res.status === 404) {
-                this.lastError = '云端数据不存在';
-                this.updateStatus('error');
             }
-        } catch (e) {
-            console.error('CloudSync pull error:', e);
-            this.lastError = e.message;
+        }, (err) => {
+            console.error('CloudSync listen error:', err);
+            this.lastError = err.message;
             this.updateStatus('error');
-        }
+        });
 
-        this.isPulling = false;
+        this.updateStatus('synced');
+    },
+
+    // ===== 停止监听 =====
+    stopListening() {
+        if (this.listeningRef) {
+            this.listeningRef.off();
+            this.listeningRef = null;
+        }
+        this.updateStatus('disabled');
     },
 
     // ===== 本地数据变化时触发 =====
@@ -229,36 +258,39 @@ const CloudSync = {
         this.pushTimer = setTimeout(() => this.push(), 1000);
     },
 
-    // ===== 开始轮询 =====
-    startPolling() {
-        if (this.pollTimer) clearInterval(this.pollTimer);
-        // 每5秒拉取一次
-        this.pollTimer = setInterval(() => this.pull(), 5000);
-        this.updateStatus('synced');
-    },
-
-    // ===== 停止轮询 =====
-    stopPolling() {
-        if (this.pollTimer) {
-            clearInterval(this.pollTimer);
-            this.pollTimer = null;
-        }
-        this.updateStatus('disabled');
-    },
+    // ===== 兼容旧接口 =====
+    startPolling() { this.startListening(); },
+    stopPolling() { this.stopListening(); },
 
     // ===== 关闭同步 =====
     disable() {
         this.enabled = false;
-        this.stopPolling();
+        this.stopListening();
         clearTimeout(this.pushTimer);
         this.saveSettings();
         this.clearUrlHash();
+        this.updateStatus('disabled');
+    },
+
+    // ===== 剥离过大的媒体数据（视频不同步，仅保留标记） =====
+    stripLargeMedia(data) {
+        if (!data || !data.pendingReviews) return data;
+        const cleaned = JSON.parse(JSON.stringify(data));
+        cleaned.pendingReviews = (cleaned.pendingReviews || []).map(r => {
+            if (r.media && r.media.type === 'video' && r.media.data) {
+                // 视频太大不同步，仅保留类型标记
+                r.media = { type: 'video', data: null, note: '视频仅在本地保存' };
+            }
+            return r;
+        });
+        return cleaned;
     },
 
     // ===== 保存设置 =====
     saveSettings() {
         localStorage.setItem('mcCloudSync', JSON.stringify({
-            blobId: this.blobId,
+            blobId: this.roomId,
+            roomId: this.roomId,
             enabled: this.enabled,
             lastCloudTimestamp: this.lastCloudTimestamp
         }));
@@ -276,8 +308,8 @@ const CloudSync = {
 
     // ===== URL Hash 管理 =====
     updateUrlHash() {
-        if (this.blobId) {
-            history.replaceState(null, '', '#sync=' + this.blobId);
+        if (this.roomId) {
+            history.replaceState(null, '', '#sync=' + this.roomId);
         }
     },
 
@@ -287,9 +319,9 @@ const CloudSync = {
 
     // ===== 获取分享链接 =====
     getShareLink() {
-        if (!this.blobId) return null;
+        if (!this.roomId) return null;
         const base = window.location.origin + window.location.pathname;
-        return base + '#sync=' + this.blobId;
+        return base + '#sync=' + this.roomId;
     },
 
     // ===== 更新状态指示器 =====
@@ -309,7 +341,7 @@ const CloudSync = {
         indicator.innerHTML = '<span class="sync-dot"></span><span>' + s.text + '</span>';
     },
 
-    // ===== 格式化同步码（方便显示） =====
+    // ===== 格式化同步码 =====
     formatCode(code) {
         if (!code) return '';
         return code;
