@@ -1,18 +1,18 @@
 /**
  * 云端同步模块 - 多设备实时同步
- * 使用 Firebase Realtime Database
- * 需要 firebase-config.js 配置
+ * 使用 Supabase (PostgreSQL + Realtime)
+ * 需要 supabase-config.js 配置
  *
  * 优势：
- * - 真正的实时同步（无需轮询，数据变化即时推送）
+ * - 真正的实时同步（基于 PostgreSQL CDC，数据变化即时推送）
  * - 离线缓存（断网可用，联网自动同步）
- * - Google 维护，稳定可靠
- * - 免费额度充足（1GB存储 + 每月10GB流量）
+ * - 国内可访问（AWS 新加坡节点）
+ * - 免费额度充足（500MB 存储 + 无限 API 请求）
  */
 const CloudSync = {
-    db: null,
+    client: null,
     roomId: null,
-    listeningRef: null,
+    listeningChannel: null,
     pushTimer: null,
     isPushing: false,
     isPulling: false,
@@ -50,43 +50,44 @@ const CloudSync = {
             }
         }
 
-        // 如果已启用，初始化 Firebase 并开始监听
+        // 如果已启用，初始化 Supabase 并开始监听
         if (this.enabled && this.roomId) {
-            this.initFirebase().then(ok => {
+            this.initSupabase().then(ok => {
                 if (ok) this.startListening();
             });
         }
     },
 
-    // ===== 初始化 Firebase =====
-    async initFirebase() {
+    // ===== 初始化 Supabase =====
+    async initSupabase() {
         if (this.isInitialized) return true;
 
-        if (typeof firebase === 'undefined') {
-            this.lastError = 'Firebase SDK 未加载';
+        if (typeof supabase === 'undefined') {
+            this.lastError = 'Supabase SDK 未加载';
             this.updateStatus('error');
             return false;
         }
 
-        if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey || window.FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') {
-            this.lastError = 'Firebase 未配置';
+        if (!window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.url || window.SUPABASE_CONFIG.url.includes('YOUR_PROJECT')) {
+            this.lastError = 'Supabase 未配置';
             this.updateStatus('error');
             return false;
         }
 
         try {
-            firebase.initializeApp(window.FIREBASE_CONFIG);
-            this.db = firebase.database();
+            this.client = supabase.createClient(
+                window.SUPABASE_CONFIG.url,
+                window.SUPABASE_CONFIG.anonKey,
+                {
+                    realtime: {
+                        params: { eventsPerSecond: 10 }
+                    }
+                }
+            );
             this.isInitialized = true;
             return true;
         } catch (e) {
-            // 如果已经初始化过，直接获取实例
-            if (e.code === 'app/duplicate-app') {
-                this.db = firebase.database();
-                this.isInitialized = true;
-                return true;
-            }
-            console.error('Firebase init error:', e);
+            console.error('Supabase init error:', e);
             this.lastError = e.message;
             this.updateStatus('error');
             return false;
@@ -105,19 +106,24 @@ const CloudSync = {
 
     // ===== 创建新的云端同步 =====
     async create() {
-        if (!(await this.initFirebase())) {
-            throw new Error(this.lastError || 'Firebase 初始化失败');
+        if (!(await this.initSupabase())) {
+            throw new Error(this.lastError || 'Supabase 初始化失败');
         }
 
         const roomId = this.generateRoomId();
 
         const payload = {
+            id: roomId,
             data: this.stripLargeMedia(Store.data),
             timestamp: Date.now(),
             device: this.getDeviceId()
         };
 
-        await this.db.ref('workspaces/' + roomId).set(payload);
+        const { error } = await this.client
+            .from('workspaces')
+            .upsert(payload);
+
+        if (error) throw new Error(error.message);
 
         this.roomId = roomId;
         this.enabled = true;
@@ -136,23 +142,26 @@ const CloudSync = {
         code = code.trim().toUpperCase();
         if (!code) throw new Error('请输入同步码');
 
-        if (!(await this.initFirebase())) {
-            throw new Error(this.lastError || 'Firebase 初始化失败');
+        if (!(await this.initSupabase())) {
+            throw new Error(this.lastError || 'Supabase 初始化失败');
         }
 
-        const snapshot = await this.db.ref('workspaces/' + code).once('value');
-        const payload = snapshot.val();
+        const { data, error } = await this.client
+            .from('workspaces')
+            .select('*')
+            .eq('id', code)
+            .single();
 
-        if (!payload || !payload.data) throw new Error('同步码无效或数据不存在');
+        if (error || !data) throw new Error('同步码无效或数据不存在');
 
         // 合并云端数据到本地
         this.isPulling = true;
         Store.data = Object.assign(
             JSON.parse(JSON.stringify(Store.defaultData)),
-            payload.data
+            data.data
         );
         Store.save();
-        this.lastCloudTimestamp = payload.timestamp || 0;
+        this.lastCloudTimestamp = data.timestamp || 0;
         this.isPulling = false;
 
         UI.updateTopbar();
@@ -171,19 +180,24 @@ const CloudSync = {
 
     // ===== 推送本地数据到云端 =====
     async push() {
-        if (!this.enabled || !this.roomId || this.isPushing || this.isPulling || !this.db) return;
+        if (!this.enabled || !this.roomId || this.isPushing || this.isPulling || !this.client) return;
 
         this.isPushing = true;
         this.updateStatus('syncing');
 
         try {
             const payload = {
+                id: this.roomId,
                 data: this.stripLargeMedia(Store.data),
                 timestamp: Date.now(),
                 device: this.getDeviceId()
             };
 
-            await this.db.ref('workspaces/' + this.roomId).set(payload);
+            const { error } = await this.client
+                .from('workspaces')
+                .upsert(payload);
+
+            if (error) throw error;
 
             this.lastCloudTimestamp = payload.timestamp;
             this.hasUnsyncedChanges = false;
@@ -201,50 +215,62 @@ const CloudSync = {
 
     // ===== 实时监听云端数据变化 =====
     startListening() {
-        if (this.listeningRef) {
-            this.listeningRef.off();
+        if (this.listeningChannel && this.client) {
+            this.client.removeChannel(this.listeningChannel);
         }
 
-        this.listeningRef = this.db.ref('workspaces/' + this.roomId);
+        this.listeningChannel = this.client
+            .channel('workspace-' + this.roomId)
+            .on('postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'workspaces',
+                    filter: 'id=eq.' + this.roomId
+                },
+                (payload) => {
+                    if (this.isPushing) return;
 
-        this.listeningRef.on('value', (snapshot) => {
-            if (this.isPushing) return;
-
-            const payload = snapshot.val();
-            if (payload && payload.data) {
-                const cloudTime = payload.timestamp || 0;
-                if (cloudTime > this.lastCloudTimestamp) {
-                    // 云端数据更新，更新本地
-                    this.isPulling = true;
-                    Store.data = Object.assign(
-                        JSON.parse(JSON.stringify(Store.defaultData)),
-                        payload.data
-                    );
-                    Store.save();
-                    this.lastCloudTimestamp = cloudTime;
-                    this.hasUnsyncedChanges = false;
-                    this.saveSettings();
-                    UI.updateTopbar();
-                    App.render();
-                    this.updateStatus('synced');
-                    this.lastError = null;
-                    this.isPulling = false;
+                    const newData = payload.new;
+                    if (newData && newData.data) {
+                        const cloudTime = newData.timestamp || 0;
+                        if (cloudTime > this.lastCloudTimestamp) {
+                            // 云端数据更新，更新本地
+                            this.isPulling = true;
+                            Store.data = Object.assign(
+                                JSON.parse(JSON.stringify(Store.defaultData)),
+                                newData.data
+                            );
+                            Store.save();
+                            this.lastCloudTimestamp = cloudTime;
+                            this.hasUnsyncedChanges = false;
+                            this.saveSettings();
+                            UI.updateTopbar();
+                            App.render();
+                            this.updateStatus('synced');
+                            this.lastError = null;
+                            this.isPulling = false;
+                        }
+                    }
                 }
-            }
-        }, (err) => {
-            console.error('CloudSync listen error:', err);
-            this.lastError = err.message;
-            this.updateStatus('error');
-        });
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    this.updateStatus('synced');
+                } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    this.lastError = '实时连接异常';
+                    this.updateStatus('error');
+                }
+            });
 
         this.updateStatus('synced');
     },
 
     // ===== 停止监听 =====
     stopListening() {
-        if (this.listeningRef) {
-            this.listeningRef.off();
-            this.listeningRef = null;
+        if (this.listeningChannel && this.client) {
+            this.client.removeChannel(this.listeningChannel);
+            this.listeningChannel = null;
         }
         this.updateStatus('disabled');
     },

@@ -2428,13 +2428,13 @@ const App = {
 
     // 同步设置（未连接时）
     showSyncSetup() {
-        const firebaseReady = (typeof window.FIREBASE_CONFIG !== 'undefined' && window.FIREBASE_CONFIG.apiKey && window.FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY');
-        const configWarning = firebaseReady ? '' : `
+        const supabaseReady = (typeof window.SUPABASE_CONFIG !== 'undefined' && window.SUPABASE_CONFIG.url && !window.SUPABASE_CONFIG.url.includes('YOUR_PROJECT'));
+        const configWarning = supabaseReady ? '' : `
             <div style="background:#FFF3E0;border:2px solid #FF9800;border-radius:12px;padding:12px;margin-bottom:12px;">
                 <p style="font-size:13px;color:#E65100;line-height:1.6;">
-                    \u26A0\uFE0F \u9996\u6B21\u4F7F\u7528\u9700\u914D\u7F6E Firebase\uFF1A<br>
-                    1. \u6253\u5F00 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">js/firebase-config.js</code><br>
-                    2. \u6309\u6587\u4EF6\u5185\u8BF4\u660E\u586B\u5165 Firebase \u914D\u7F6E<br>
+                    \u26A0\uFE0F \u9996\u6B21\u4F7F\u7528\u9700\u914D\u7F6E Supabase\uFF1A<br>
+                    1. \u6253\u5F00 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">js/supabase-config.js</code><br>
+                    2. \u6309\u6587\u4EF6\u5185\u8BF4\u660E\u586B\u5165 Supabase \u914D\u7F6E<br>
                     3. \u5237\u65B0\u9875\u9762\u5373\u53EF\u4F7F\u7528
                 </p>
             </div>
