@@ -2387,42 +2387,53 @@ body.parent-mode .parent-mode-badge { display: inline-flex; align-items: center;
     background: #FFF3E0;
 }
 
-/* 课文原文 */
-.lesson-text-content {
-    padding: 14px 16px;
+/* 课文原文图片 */
+.lesson-image-wrapper {
     background: #FFFDE7;
     border: 2px solid #FCD116;
     border-radius: 10px;
-    font-size: 16px;
-    color: #3A3A3A;
-    line-height: 2.4;
-    max-height: 380px;
+    padding: 12px;
+    text-align: center;
+}
+
+.lesson-image-wrapper.modal {
+    margin-top: 8px;
+    max-height: 300px;
     overflow-y: auto;
 }
 
-.lesson-para {
-    margin: 0 0 6px 0;
-    text-indent: 2em;
+.lesson-image {
+    max-width: 100%;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.lesson-para:last-child {
-    margin-bottom: 0;
+.lesson-image-error {
+    padding: 20px;
+    background: #FFEBEE;
+    color: #C62828;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: center;
 }
 
-.lesson-text-content ruby {
-    ruby-position: over;
-    ruby-align: center;
-    margin-right: 4px;
-    letter-spacing: 2px;
+.lesson-image-actions {
+    margin-top: 10px;
+    text-align: center;
 }
 
-.lesson-text-content rt {
-    font-size: 11px;
-    color: #666;
-    font-family: 'Nunito', 'Microsoft YaHei', sans-serif;
-    line-height: 1.2;
-    padding-bottom: 2px;
-    font-weight: 600;
+.lesson-image-empty {
+    background: #FFFDE7;
+    border: 2px dashed #FCD116;
+    border-radius: 10px;
+    padding: 24px 16px;
+    text-align: center;
+}
+
+.lesson-image-empty.modal {
+    margin-top: 8px;
 }
 
 /* 笔顺展示 */
